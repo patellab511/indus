@@ -1,0 +1,30 @@
+### INDUS input file ###
+
+# Files
+GroFile = ../../../sample_traj/bulk_water_278K/initconf.gro
+TopFile = ../../../sample_traj/bulk_water_278K/processed.top
+XtcFile = ../../../sample_traj/bulk_water_278K/traj_water_278K_b1000_e1010.xtc
+
+# Water oxygens
+Target = [ atom_type OW ]
+
+# Probe volume
+ProbeVolume = {
+	type   = sphere
+	radius = 1.0
+	center = [ 0.2 0.3 0.4  ]
+	# Coarse-graining
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# Biasing parameters
+Bias = {
+	# Harmonic potential
+	order_parameter = ntilde
+	x_star = 0.0
+	kappa  = 1.0
+}
+
+# Output options
+PrintForces = yes

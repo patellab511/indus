@@ -1,0 +1,7 @@
+F_v(Ntilde) from UWHAM for a small probe volume in bulk water
+
+GROMACS 2016.3
+T = 300 K, P = 1 bar
+kappa = 0.89 kJ/mol
+nstar = 24.3, 18.8, 13.3, 7.8, 2.3, -3.2, -8.7 (also, an unbiased simulation)
+f_bias_WHAM.out --> consensus free energies

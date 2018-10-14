@@ -1,0 +1,30 @@
+### INDUS input file ###
+
+# Files
+XtcFile = ../../../sample_traj/bulk_water_278K/traj_water_278K_b1000_e1010.xtc
+
+# Water oxygens
+Target = [ atom_index 1-16500:4 ]
+
+# Probe volume
+ProbeVolume = {
+	type = box
+	# Bounds
+	x_range = [ 1.0 2.0 ]
+	y_range = [ 1.8 3.1 ]
+	z_range = [ 3.5 4.0 ]
+	# Coarse-graining
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# Biasing parameters
+Bias = {
+	# Harmonic potential
+	order_parameter = ntilde
+	x_star = 0.0
+	kappa  = 1.0
+}
+
+# Output options
+PrintForces = yes

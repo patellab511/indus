@@ -1,0 +1,666 @@
+%-------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%-------------------------------------------------------------------
+
+\documentclass[11pt,notitlepage]{article}
+
+\usepackage{helvet} % Helvetica font
+
+\usepackage[T1]{fontenc}
+
+% Various AMS packages
+\usepackage{amsfonts, amsmath, amsthm, amssymb} % For math fonts, symbols and environments
+
+% More equation typesetting
+\usepackage{commath}
+\usepackage{physics}
+
+\usepackage{graphicx} % Required for including images
+\usepackage{caption}
+\usepackage{booktabs} % Top and bottom rules for table
+
+% Reduce the size of the margin
+\usepackage[top=0.75in,bottom=0.75in,left=0.5in,right=0.5in]{geometry}
+
+\usepackage{authblk}
+\usepackage{hyperref}
+
+% Typeset code
+\usepackage{color}
+\usepackage{xcolor}
+\definecolor{lightlightgray}{gray}{0.9}
+
+% For typesetting code
+\usepackage{listings}
+\lstset{
+	numbers=left,  % line numbers
+	numberstyle=\tiny,
+	frame=tb,  % lines above and below the section
+	xleftmargin=0.25in,
+	xrightmargin=0.25in,
+	tabsize=2,  % how many spaces are equivalent to \t
+	breaklines=true,
+	mathescape=true,  % allow inline math within listings environment
+	backgroundcolor=\color{lightlightgray},  % (very) light gray background
+	basicstyle=\ttfamily\footnotesize,
+	%commentstyle=\color{cyan}\ttfamily,
+	morecomment=[l][\color{blue}]{\#}
+}
+
+% Header
+\usepackage{fancyhdr}
+\lhead{} % Remove subsection title from top-left of page
+\renewcommand{\headrulewidth}{0pt}
+\setlength{\headheight}{20pt} 
+
+% Add a black line between paragraphs for readability
+\usepackage[parfill]{parskip}
+
+% More space between table entries
+\renewcommand{\arraystretch}{1.2}
+
+%\pagenumbering{gobble} % Removes page numbering
+%\usepackage{mathrsfs}
+%\usepackage{xfrac}
+%\makeatother % Not sure what this does
+
+\pagestyle{fancy}
+
+%-------------------------------------------------------------------
+%	MACROS
+%-------------------------------------------------------------------
+
+% Email
+\newcommand{\email}[1]{\href{mailto:{#1}}{{#1}}}
+
+
+% Italicized et al.
+\newcommand{\etal}{\emph{et al.}}
+\newcommand{\ie}{\emph{i.e.} }
+\newcommand{\eg}{\emph{e.g.}}
+
+% Operators
+\newcommand{\dotprod}{\boldsymbol{\cdot}}
+\newcommand{\kB}{k_{\text{B}}}
+
+%%%%%%%%%
+% LINKS %
+%%%%%%%%%
+
+% For the INDUS project
+\newcommand{\repo}[1][GitHub]{\href{https://github.com/seanmarks/indus}{#1}}
+
+% Home page for PLUMED
+\newcommand{\PLUMED}{\href{http://www.plumed.org/}{PLUMED}}
+
+% Google group for PLUMED users (have to add a \ before the #!)
+\newcommand{\plumedusers}[1][link]{\href{https://groups.google.com/forum/\#!forum/plumed-users}{#1}}
+
+% For PLUMED documentation
+\newcommand{\plumeddoc}{https://plumed.github.io/doc-v2.4/user-doc/html}
+\newcommand{\driver}{\href{\plumeddoc/driver.html}{\texttt{driver}}}
+\newcommand{\installplumed}[1][link]{\href{\plumeddoc/_installation.html}{#1}}
+
+% Home pages for MD engines
+\newcommand{\GROMACS}{\href{http://www.gromacs.org/}{GROMACS}}
+\newcommand{\LAMMPS}{\href{https://lammps.sandia.gov/}{LAMMPS}}
+\newcommand{\AMBER}{\href{http://ambermd.org/}{AMBER}}
+\newcommand{\NAMD}{\href{https://www.ks.uiuc.edu/Research/namd/}{NAMD}}
+
+%-------------------------------------------------------------------
+%	DOCUMENT
+%-------------------------------------------------------------------
+
+\begin{document}
+	
+% Prints the affiliations in a smaller, italicized font
+\renewcommand\Affilfont{\itshape\small}
+	
+\title{INDUS for PLUMED\\User Manual}
+\author{Sean M. Marks\\(\email{semarks@seas.upenn.edu})\\Amish J. Patel*\\(\email{amish.patel@seas.upenn.edu})}
+\affil{Patel Group\\University of Pennsylvania}
+	
+% Uncomment this to hide the date
+%\date{}
+
+\maketitle
+\tableofcontents
+
+%%%
+
+\section{Introduction}
+
+The INDUS code described here computes the number of particles, $N_v$, and the coarse-grained number of particles, $\tilde{N}_v$, in probe volumes, $v$, of several different geometries. It is primarily intended to be used as an extension to \PLUMED, a popular plugin for molecular dynamics (MD) engines such as \GROMACS, \LAMMPS, \AMBER, and \NAMD. As part of PLUMED, the INDUS code can be used to post-process trajectories stored in a variety of formats (see \driver). If PLUMED+INDUS is subsequently patched into an MD engine, it can be used to perform biased simulations with $\tilde{N}_v$.
+
+Note that INDUS can also be compiled as a standalone code. However, this is intended primarily for development purposes.
+
+For more on the INDUS method in theory and practice, here is a (non-exhaustive) list of topics and relevant references:
+\begin{itemize}
+	\item INDUS for beginners \cite{Patel2010}
+	\item INDUS in probe volumes of all shapes and sizes \cite{Patel2011}
+	\item INDUS for biological systems, especially proteins \cite{Patel2012,Patel2014}
+	\item INDUS and the sparse sampling method, an alternative to traditional umbrella sampling for efficiently computing $F_v(\tilde{N})$ \cite{Xi2016,Xi2018}
+\end{itemize}
+
+%%%
+
+\subsection{Units}
+
+The INDUS code uses the same basic set of units as PLUMED, which also happens to be the same as GROMACS.
+
+% Units
+\begin{center}
+	\begin{tabular}{| c c |} 
+		\hline
+		\textbf{Quantity} & \textbf{Units} \\
+		\hline
+		Length & nm = $10^{-9}$ m = 10 \AA \\
+		Time   & ps = $10^{-12}$ s \\
+		Mass   & amu \\
+		\hline
+		Energy & kJ/mol \\
+		\hline
+	\end{tabular}
+\end{center}
+
+%%%
+
+\section{Getting the Code}
+
+% TODO
+The code is available on GitHub (\repo[link]).
+
+%%%
+
+\section{Installation}
+
+%%%
+
+\subsection{Patching INDUS into PLUMED}
+
+It is recommended that you make use of the INDUS code as an extension to \PLUMED. Make sure that you perform the following steps \textbf{before} configuring and compiling PLUMED! 
+
+A shell script to aid you in the patching process is available in the INDUS code repository at \texttt{plumed\_patch/patch\_plumed.sh}. When you run the script, simply pass to it the location of the root directory of the PLUMED repository (\emph{i.e.} the one that contains the \texttt{Makefile} and so on):
+
+\begin{lstlisting}
+./patch_plumed.sh <location-of-PLUMED-source-code>
+\end{lstlisting}
+
+Then simply configure, compile, and install PLUMED normally. For instructions on how to install PLUMED, see \installplumed[here].
+
+Once installation is complete, a new action, \texttt{INDUS}, will be available to you the next time you run PLUMED. You can check that the procedure was successful by running the following command:
+
+\begin{lstlisting}
+plumed --no-mpi manual --vim --action INDUS
+\end{lstlisting}
+
+This will print out a list of all the actions and command-line tools registered in PLUMED, followed by options which are specific to the \texttt{INDUS} action. (\emph{Note}: The \texttt{--no-mpi} option flag is to prevent PLUMED from looking for an MPI library, since none is required for this check. The \texttt{--vim} flag causes output to be printed in a console-friendly format.)
+
+%%%
+
+\subsection{Patching PLUMED+INDUS into an MD Code}
+
+Once you have installed PLUMED+INDUS, follow the instructions \href{\plumeddoc/_installation.html#Patching}{here} to add it to your MD engine of choice. Note that a given version of PLUMED only supports certain versions of each MD code. To check which MD codes and versions are supported by each version of PLUMED, check out the online manual (\href{https://plumed.github.io/doc.html}{link}).
+
+%%%
+
+\subsection{Installing the Code as a Standalone Program}
+
+The INDUS code can be compiled as a standalone program that can analyze XTC files. Before proceeding, you will need to install the \texttt{xdrfile} library written by the GROMACS development team (see \href{http://www.gromacs.org/Developer_Zone/Programming_Guide/XTC_Library}{here}). Make note of where you install it: you will need this information later.
+
+Once you have installed \texttt{xdrfile}, go to the main directory of the INDUS code repository and change the following lines in the \texttt{Makefile}:
+
+\begin{lstlisting}[mathescape=false]
+# This variable indicates where you installed xdrfile (i.e. the directory containing the folders bin, include, and lib).
+XDR_DIR=$(HOME)/programs/xdrfile/1.1.4
+
+# If you aren't using a compiler that supports MPI, change the following lines
+# - Mac OSX: CC=clang, CXX=clang++
+# - Linux: CC=gcc, CXX=g++
+CC=mpicc
+CXX=mpic++
+
+# Change this variable to 0 (false) if you aren't using MPI compilers
+is_mpi_enabled=1
+\end{lstlisting}
+
+%%%%%%
+
+\section{Using the Code}
+
+
+This section discusses how to use the INDUS code as part of PLUMED, and as a standalone code. Note that the INDUS code uses its own input file (\texttt{indus.input}), which is separate from the normal PLUMED input file (\texttt{plumed.dat}) and has its own syntax. Section \ref{sec:input} will discuss the details of the INDUS input file.
+
+%%%
+
+\subsection{As Part of PLUMED}
+
+Below is a sample PLUMED input file. Observe that the INDUS input file, \texttt{indus.input}, is an input to the \texttt{INDUS} action.
+
+\begin{lstlisting}
+# plumed.dat - PLUMED input file
+
+# Create an instance of the INDUS action, which governs the interface between
+# PLUMED and the INDUS code
+indus: INDUS INPUTFILE=indus.input
+
+# Put a harmonic bias on Ntilde_v of the form U = KAPPA/2*(Ntilde_v - AT),
+# where KAPPA=1.0 kJ/mol and AT=0.0
+restraint: RESTRAINT ARG=indus.ntilde KAPPA=1.0 AT=0.0 
+
+# Print some important quantities
+# - indus.n        = N_v
+# - indus.ntilde   = Ntilde_v
+# - restraint.bias = value of the biasing potential
+# - STRIDE=500     = print every 500 steps (i.e. every 1 ps when dt=0.002ps)
+PRINT ...
+	LABEL=print
+	ARG=indus.n,indus.ntilde,restraint.bias
+	STRIDE=500
+	FILE=plumed.out
+... PRINT
+\end{lstlisting}
+
+%%%
+
+\subsection{As a Standalone Program (XTC files only)}
+
+When compiled as a standalone program, the INDUS code can be used to analyze XTC files. Invoke from the command line using the following syntax:
+
+\begin{lstlisting}
+./indus <indus.input>
+\end{lstlisting}
+
+See Section \ref{sec:input_standalone} for input options particular to running in standalone mode.
+
+%%%%%%
+
+\subsection{Limitations of the Code and Warnings to Users}
+
+\begin{enumerate}
+	\item Only orthorhombic boxes are supported (i.e. rectangular box where the side lengths may differ from each other)
+	\item Only one probe volume may be specified per instance of INDUS.
+	\item You should be able to pass \texttt{indus.ntilde} and \texttt{indus.ubias} to any other PLUMED action with no problems. However, I have not tested this aside from passing \texttt{indus.ntilde} and \texttt{indus.ubias} to \texttt{RESTRAINT}.
+	\item I used PLUMED 2.4.0 and GROMACS 2016.3 when writing and testing the code. Any other versions of PLUMED that are 2.2 or higher should work just fine, but I have not tested these and cannot guarantee that they will work. The program should run fine with any simulation package that your favorite PLUMED version supports, but---again---I haven't tested it myself.
+\end{enumerate}
+
+% INPUT OPTIONS
+
+\section{Input Options}{\label{sec:input}}
+
+This section discusses the syntax of the INDUS input file, which is typically named \texttt{indus.input}.
+
+\emph{Note:} In the following section, angle brackets (\texttt{<>}) are used to indicate places where a value should be placed. The angle brackets themselves are not part of the actual input syntax. Vertical lines (\texttt{|}) are used to enumerate options when only a limited number of values are permitted. For example, \texttt{axis = <x|y|z>} indicates that you must choose \texttt{axis} to be either \texttt{x}, \texttt{y}, or \texttt{z}.
+
+%%%%%%
+
+\subsection{Input File Structure}
+
+The INDUS input file is organized into key-item pairs, where the \emph{item} can be one of the following: 
+\begin{enumerate}
+	\item a \emph{value}: a string or number
+	\item a \emph{vector}: a sequence of values enclosed by square brackets, [ \ ]. Sometimes I will also use the term \emph{array}, which is simply a vector that has a fixed number of values.
+	\item a \emph{block}: an arbitrary grouping of values, vectors, and possibly other blocks, all enclosed by curly braces, { \ }. A block functions like an object (in the sense of object-oriented programming) and all of the entries within its curly braces are said to be in its \emph{scope}.
+\end{enumerate}
+
+It is instructive to consider an example:
+
+\begin{lstlisting}
+MyBlock = {
+	# This is a comment
+	some_value  = 2.718
+	some_vector = [ 1.0  2.0  3.0 ]   # This is a comment at the end of a line
+	
+	# Presumably, MyBlock corresponds to an object in the code that owns 
+	# another object of type NestedBlock
+	NestedBlock = {
+		another_value = 3.14159
+		AnotherBlock = { another_vector = [ we are values ] }
+	}
+}
+\end{lstlisting}
+
+Observe that each key is separated from its corresponding item by an equals sign (\texttt{=}). Comments are indicated by the hash character (\texttt{\#}). Each token in the input file (e.g. keys, values, equals signs, brackets, braces, comment characters, etc.) must be separated from the others by whitespace (single/multiple spaces or a new line). 
+
+Aside from the aforementioned restrictions, the input syntax is quite flexible. Indentation is not necessary, and braces/brackets/equals signs need not be on the same line as any other token. For example, the following is an eyesore but perfectly legal:
+
+\begin{lstlisting}
+MyBlock 
+= { some_vector = [ 
+1.0  2.0  
+3.0 ] }
+\end{lstlisting}
+
+%%%
+
+Each key-item pair exists within a scope. The highest scope in the input file is the \emph{file scope}. This encompasses all the values, vectors, and blocks that are not enclosed in other blocks. For instance, \texttt{MyBlock} in the previous examples is a block at file scope. In contrast, \texttt{NestedBlock} and \texttt{some\_vector} are within the scope of \texttt{MyBlock}. In this way of thinking, the input file \emph{itself} is like an object at the top of the hierarchy.
+
+%%%%%%
+
+\subsection{Target Atom Selection}
+
+Target atoms are indicated by the key \texttt{Target} at file scope. This is a unique key (multiple target selections are not permitted).
+
+\subsubsection{By Index}
+
+Atoms are selected as ranges of indices of the form \texttt{<start>-<stop>:<stride>}, the same as in PLUMED. This selects every \texttt{<stride>}th atom from index \texttt{start} to \texttt{stop}. All indices start at 1. if \texttt{:<stride>} is omitted, the stride is assumed to be 1.
+
+Here are some examples.
+
+\begin{lstlisting}
+# Select every 4th atom from index 1 to index 16500
+Target = [ atom_index 1-16500:4 ]
+
+# Select every atom from index 500 to index 1000
+Target = [ atom_index 500-1000 ]
+
+# Ranges can be combined using a comma (no spaces)
+Target = [ atom_index  1-16500:4,32000-64000:3 ]
+\end{lstlisting}
+
+%%%
+
+\subsection{Probe Volume Geometries}
+
+Probe volumes are defined at global scope using the keyword \texttt{ProbeVolume}. Only one probe volume geometry may be specified per instance of INDUS. To define multiple probe volumes using PLUMED, one must create multiple instances of the \texttt{INDUS} action.
+
+%%%
+
+\subsubsection{Sphere}
+
+\begin{lstlisting}
+ProbeVolume = {
+  type   = sphere
+  radius = <$r$>
+  center = [ <$x$>  <$y$>  <$z$>  ]
+  # Coarse-graining
+  sigma   = <$\sigma$>
+  alpha_c = <$\alpha_c$>
+}
+\end{lstlisting}
+
+%%%%%%
+
+\subsubsection{Box}
+
+\begin{lstlisting}
+ProbeVolume = {
+	type   = box
+	# Boundaries of box along each axis
+	x_range = [ <$x_{\text{low}}$> <$x_{\text{high}}$> ]
+	y_range = [ <$y_{\text{low}}$> <$y_{\text{high}}$> ]
+	z_range = [ <$z_{\text{low}}$> <$z_{\text{high}}$> ]
+	# Coarse-graining
+	sigma   = <$\sigma$>
+	alpha_c = <$\alpha_c$>
+}
+\end{lstlisting}
+
+%%%%%%
+
+\subsubsection{Cylinder}
+
+\begin{lstlisting}
+ProbeVolume = {
+	type   = cylinder
+	# Cylinder will have its axis parallel to this axis 
+	# - Default: parallel to $z$-axis
+	axis    = <x|y|z>
+	# Location of the center of the base
+	base    = [ <$x$>  <$y$>  <$z$>  ]
+	radius  = <$r$>
+	height  = <$h$>
+	# Coarse-graining
+	sigma   = <$\sigma$>
+	alpha_c = <$\alpha_c$>
+}
+\end{lstlisting}
+
+%%%%%%
+
+\subsection{Biasing $\tilde{N}_v$ Using the INDUS Code's Potential}
+
+As an alternative to PLUMED's implementation, the INDUS code makes available its own biasing potential of the following general form:
+
+\begin{align}
+	\mathcal{U}_{\text{bias}}(x) 
+	&= \mathcal{U}_{\text{harmonic}}(x) + \mathcal{U}_{\text{linear}}(x)
+	     + \mathcal{U}_{\text{left harmonic}}(x) + \mathcal{U}_{\text{right harmonic}}(x) \\
+	&= \frac{1}{2} \kappa (x - x^*)^2 + (\phi x + c)
+	     + k_{\text{left}} \Theta(x_{\text{left}} - x) + k_{\text{right}} \Theta(x - x_{\text{right}})
+\end{align}
+
+\noindent where $\Theta(x)$ is the unit step function, which is zero for $x < 0$ and one for $x \ge 1$. The corresponding syntax for the INDUS input file is:
+
+\begin{lstlisting}
+Bias = {
+	# Tells INDUS that x=Ntilde_v
+	order_parameter = ntilde
+
+	# Harmonic
+	x_star = <$x^*$>
+	kappa  = <$\kappa$>
+
+	# Linear
+	phi      = <$\phi$>
+	constant = <$c$>
+
+	# Left one-sided harmonic
+	x_left = <$x_{\text{left}}$>
+	k_left = <$k_{\text{left}}$>
+
+	# Right one-sided harmonic
+	x_right = <$x_{\text{right}}$>
+	k_right = <$k_{\text{right}}$>
+}
+\end{lstlisting}
+
+\noindent Any parameters not specified in the input file are set to zero automatically.
+
+%%%
+
+Then, in the PLUMED input file, $\mathcal{U}_{\text{bias}} = \mathcal{U}_{\text{bias}}(\tilde{N}_v)$ is passed to \texttt{RESTRAINT} as its \texttt{ARG}:
+
+\begin{lstlisting}
+restraint: RESTRAINT ARG=indus.ubias SLOPE=1.0 AT=0.0 KAPPA=0.0
+\end{lstlisting}
+
+%%%%%%
+
+\subsection{Standalone Mode Options}{\label{sec:input_standalone}}
+
+The following options are supported at file scope.
+
+\begin{lstlisting}
+# The XTC file to analyze
+XtcFile = <path_to_file>
+
+# Range of times for which calculations are performed (in ps)
+t0 = <$t_0$>
+tf = <$t_f$>
+\end{lstlisting}
+
+\noindent All of these options are ignored when running the INDUS code as part of PLUMED.
+
+%%%%%%
+
+\subsection{Examples}
+
+%%%
+
+\subsubsection{As Part of PLUMED}
+
+Suppose we want to compute $N_v$ and $\tilde{N}_v$ in a cylindrical probe volume with the center of its base at $\mathbf{r}_0 = (2.0, 2.0, 2.0)$ nm with radius $r = 1.0$ nm and height $h = 0.5$ nm. The cylinder is parallel to the $y$-axis and extends from $y_{\text{low}} = 2.0$ nm to $y_{\text{high}} = y_{\text{low}} + h = 2.5$ nm. The target atoms have indices 1, 4, 7, ... , 16497 (i.e. every 3 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. Use the INDUS code's \texttt{Bias} feature to apply a bias of the form $\mathcal{U}_{\text{bias}} = \phi \tilde{N}$ with $\phi = 0.6$ kJ/mol.
+
+The INDUS input file will be:
+\begin{lstlisting}
+# indus.input
+
+# Atoms targeted by INDUS
+Target = [ atom_index 1-16500:3 ]
+
+# Probe volume
+ProbeVolume = {
+	type   = cylinder
+	axis   = y
+	# Dimensions and location
+	center = [ 2.0 2.0 2.0 ]
+	radius = 1.0
+	height = 0.5
+	# Coarse-graining
+	sigma = 0.01
+	alpha_c = 0.02
+}
+
+# Add a linear bias
+Bias = {
+	order_parameter = ntilde
+	phi = 0.6
+}
+\end{lstlisting}
+
+\noindent The corresponding PLUMED input file is:
+\begin{lstlisting}
+# plumed.dat
+
+# Create an instance of the INDUS action, which computes N_v and Ntilde_v
+indus: INDUS INPUTFILE=<indus.input>
+
+# Pass the bias computed by the INDUS code, U_bias, to PLUMED's RESTRAINT
+# - This is required to invoke the part of PLUMED that passes the biasing forces 
+#   to the MD engine
+# - Using this approach, ARG = U_bias(Ntilde_v) = restraint.bias
+restraint: RESTRAINT ARG=indus.ubias SLOPE=1.0 AT=0.0 KAPPA=0.0
+
+# Print N_v, Ntilde_v, and U_bias evert 500 steps
+PRINT ...
+	LABEL=print
+	ARG=indus.n,indus.ntilde,restraint.bias
+	STRIDE=500
+	FILE=plumed.out
+... PRINT
+\end{lstlisting}
+
+%%%
+
+\subsubsection{Standalone Mode}
+
+Compute $N_v$ and $\tilde{N}_v$ in a spherical probe volume center at $\mathbf{r}_0 = (2.5, 2.5, 2.5)$ nm with radius $r = 0.6$ nm. The target atoms have indices 1, 5, 9, ... , 16497 (i.e. every 4 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. Print the time series of $N_v$ and $\tilde{N}_v$ for $t \ge 100$ ps and $t \le 500$ ps. Also print the forces that would be obtained for these frames under a harmonic potential on $\tilde{N}_v$ with $\kappa = 0.89$ kJ/mol and $N^* = -5$.
+
+\begin{lstlisting}
+# indus.input
+
+# Atoms targeted by INDUS
+Target = [ atom_index 1-16500:4 ]
+
+# Probe volume
+ProbeVolume = {
+	type   = sphere
+	center = [ 2.5 2.5 2.5 ]
+	radius = 0.6
+	# Coarse-graining
+	sigma = 0.01
+	alpha_c = 0.02
+}
+
+# Add a harmonic bias
+Bias = {
+	order_parameter = ntilde
+	x_star = -5
+	kappa  = 0.89
+}
+
+# XTC file to analyze
+XtcFile = my_trajectory.xtc
+
+# Production phase (ps)
+t0 = 100
+tf = 500
+
+# Print time series of N_v and Ntilde_v, and biasing forces
+PrintOutput = yes
+PrintForces = yes
+\end{lstlisting}
+
+% BIASING PARAMETERS
+
+\section{Choice of Biasing Parameters}
+
+When performing umbrella sampling with $\tilde{N}_v$, we use the statistics of $N_v$ in the liquid basin in an unbiased simulation to guide our choice of biasing parameters. This is important for obtaining accurate results.
+
+Let the average and variance of $N_v$ in the liquid basin be $\langle N_v \rangle_0$ and $\langle (\delta N_v)^2 \rangle_0$, respectively. Assuming that the liquid basin is approximately Gaussian, its curvature is
+
+\begin{equation}
+	\kappa_0 = \frac{k_{\text{B}} T}{\langle (\delta N_v)^2 \rangle_0}
+\end{equation}
+
+Suppose that we want to bias $\tilde{N}_v$ using a harmonic potential,
+
+\begin{equation}
+	\mathcal{U}_{\text{bias}}(\tilde{N}_v) = \frac{1}{2} \kappa (\tilde{N}_v - N^*)^2,
+\end{equation}
+
+\noindent where $\kappa$ and $N^*$ are constants (the biasing parameters). We choose $\kappa$ as a multiple of $\kappa_0$:
+
+\begin{equation}
+	\kappa = \alpha \kappa_0
+\end{equation}
+
+\noindent where $\alpha = 2$ or $3$. 
+
+%%%
+
+Accurate WHAM results require overlap between adjacent windows. For a desired overlap of $ \Delta F_{\text{overlap}}$, assuming that the biased ensembles for each $N^*$-value are Gaussian are leads an estimated spacing between $N^*$-values of
+
+\begin{equation}
+	\Delta N^* = 2 \sqrt{ \frac{(\beta \Delta F_{\text{overlap}}) \langle (\delta N_v)^2 \rangle_0}{1 + \alpha} }
+\end{equation}
+
+%%%
+
+\noindent where $\beta = (\kB T)^{-1}$. For an initial guess, we typically choose $\alpha = 2$ and $\Delta F_{\text{overlap}} = 4 \ k_{\text{B}} T$. This leads to:
+
+\begin{align}
+	\kappa &= 2 \kappa_0 \\
+	\Delta N^* &= \frac{4}{\sqrt{3}} \sqrt{ \langle (\delta N_v)^2 \rangle_0 }
+\end{align}
+
+
+Note that sampling $N_v = 0$ may require you to use windows with $N^* < 0$.
+
+%%%
+
+\subsection{Example: Bulk Water}
+
+Figure \ref{fig:fvn_bulk} illustrates $F_v( \tilde{N} )$ in a small sphere in bulk water. The free energy distribution was produced using UWHAM \cite{Tan2012}. The aforementioned heuristics were used to choose the biasing parameters.
+
+% TODO
+% Citations
+% - WHAM (Hummer & Zhu, or Levy UWHAM)
+% - SPC/E water
+% - GROMACS (which article?)
+% Include Indus input file
+% Used GROMACS 2016.3
+% - Parrinello-Rahman barostat and V-rescale thermostat
+% - PME
+% List biasing parameters used (kappa, nstar-values, sigma, alpha_c, ...)
+% - kappa = 0.89 kJ/mol
+% - nstar = 24.3, 18.8, 13.3, 7.8, 2.3, -3.2, -8.7
+% - delta_nstar = 5.5
+% - Stats: avg_N_0 = 29.8, var_N_0 = 5.59247, std_dev_N_0 = 2.36484
+% - All simulations run for 2 ns (tossed out 500 ps for unbiased, 200 ps for biased)
+
+\begin{figure}
+	\label{fig:fvn_bulk}
+	\centering
+	\includegraphics[width=0.5\textwidth]{examples/bulk_water/plot_F_v_Ntilde_WHAM.eps}
+	\captionsetup{width=0.8\linewidth}
+	\caption{\label{fig:fvn_bulk}The free energy landscape for the coarse-grained number of waters, $\tilde{N}$, in a small probe volume in bulk water at $T = 300$ K and $P = 1$ bar. The probe volume, $v$, is a sphere of radius $r = 0.6$ nm in a box of about $4,000$ SPC/E water molecules.}
+\end{figure}
+
+% REFERENCES
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}

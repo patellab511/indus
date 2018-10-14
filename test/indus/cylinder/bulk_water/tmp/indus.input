@@ -1,0 +1,25 @@
+### INDUS input file ###
+
+# Files
+GroFile = ../../../../sample_traj/bulk_water_278K/initconf.gro
+TopFile = ../../../../sample_traj/bulk_water_278K/processed.top
+XtcFile = ../../../../sample_traj/bulk_water_278K/traj_water_278K_b1000_e1010.xtc
+
+# Water oxygens
+Target = [ atom_type OW ]
+
+# Probe volume
+ProbeVolume = {
+	type   = cylinder
+	axis   = y
+	# Location and dimensions
+	radius = 0.9
+	height = 0.8
+	base   = [  1.1  1.2  2.3 ]
+	# Coarse-graining
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# Output options
+PrintForces = yes

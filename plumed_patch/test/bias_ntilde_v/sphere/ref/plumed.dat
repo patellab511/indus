@@ -1,0 +1,12 @@
+indus: INDUS INPUTFILE=indus.input TOL=100.0
+
+# Restraint essenially serves as an intermediary to pass the forces 
+# from ORDERPARAMETERS to the PLUMED core
+restraint: RESTRAINT ARG=indus.ubias SLOPE=1.0 AT=0.0 KAPPA=0.0
+
+PRINT ...
+	LABEL=print
+	ARG=indus.n,indus.ntilde,indus.ubias,restraint.bias,indus.maxnormderiv 
+	STRIDE=1
+	FILE=plumed.out
+... PRINT

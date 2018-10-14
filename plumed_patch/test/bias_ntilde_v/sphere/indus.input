@@ -1,0 +1,22 @@
+### INDUS input file ###
+
+# Water oxygens
+Target = [ atom_index 1-16500:4 ]
+
+# Probe volume
+ProbeVolume = {
+	type   = sphere
+	radius = 1.0
+	center = [ 0.2 0.3 0.4  ]
+	# Coarse-graining
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# Biasing parameters
+Bias = {
+	# Harmonic potential
+	order_parameter = ntilde
+	x_star = 0.0
+	kappa  = 1.0
+}

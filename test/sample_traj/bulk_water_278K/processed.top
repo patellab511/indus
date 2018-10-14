@@ -1,0 +1,69 @@
+;
+; 	Topology file for TIP4P/Ice
+;
+
+; //// GENERAL PARAMETERS ////
+
+[ defaults ]
+; nbfunc     comb-rule      gen-pairs     fudgeLJ      fudgeQQ
+  1          2              yes           0.5          0.833333
+
+[ atomtypes ]
+; type    mass       charge      ptype     sigma[nm]         epsilon[kJ/mol]
+  OW      16.000      0.0000     A         0.31668e+00       0.8821154e+00
+  HW       1.008     +0.5897     A         0.0000e+00        0.0000e+00
+  MW       0.000     -1.1794     V         0.0000e+00        0.0000e+00
+
+; //// TIP4P/ICE ////
+
+[ moleculetype ]
+; molname      nrexcl
+  SOL          3
+
+[ atoms ]
+;  nr   type  resnr   residue  name    cgnr    charge      mass
+   1    OW    1       SOL      OW      1        0.00000    16.000
+   2    HW    1       SOL      HW1     1       +0.58970     1.008
+   3    HW    1       SOL      HW2     1       +0.58970     1.008
+   4    MW    1       SOL      MW      1       -1.17940     0.0
+
+[ constraints ]
+; i     j       funct   length
+  1     2       1       0.09572
+  1     3       1       0.09572
+  2     3       1       0.15139
+
+[ exclusions ]
+; nr    exclude
+  1     2     3     4
+  2     1     3     4
+  3     1     2     4
+  4     1     2     3
+
+; Location of virtual site "M" of TIP4P/Ice (type 3)
+[ virtual_sites3 ]
+; Dummy  from			        funct	a		        b
+  4      1       2       3      1       0.13458335      0.13458335 
+
+; The position of the dummy is computed as follows:
+;
+;		 O                    1
+;  	   /   \                /   \
+;	  /  M  \              /  4  \
+;	 /       \            /       \
+;	HW1		 HW2         2         3
+;
+; const = distance (OM) / [ cos(angle(M-O-H)) * dist(OH)    ]
+;	    = 0.01577 nm	/ [ cos(52.26 deg)	  * 0.09572 nm  ]
+;
+; a = b = const/2
+;
+; Dummy pos: r4 = r1 + a*(r2-r1) + b*(r3-r1)
+
+; //// SYSTEM ////
+
+[ system ]
+TIP4P-Ice bulk liquid
+ 
+[ molecules ]
+SOL 4125
