@@ -70,7 +70,7 @@ ProbeVolume_Box::ProbeVolume_Box(
 void ProbeVolume_Box::setCoarseGrainingParameters(const double sigma, const double alpha_c)
 {
 	sigma_   = sigma;
-	alpha_c_ = alpha_c_; // alpha_c; // FIXME
+	alpha_c_ = alpha_c; 
 
 	// Update other member variables accordingly
 	for ( int d=0; d<DIM_; ++d ) {

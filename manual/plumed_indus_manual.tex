@@ -192,7 +192,7 @@ A shell script to aid you in the patching process is available in the INDUS code
 ./patch_plumed.sh <location-of-PLUMED-source-code>
 \end{lstlisting}
 
-Then simply configure, compile, and install PLUMED normally. For instructions on how to install PLUMED, see \installplumed[here].
+Then simply configure, compile, and install PLUMED normally. For instructions on how to install PLUMED, see \installplumed[here]. For those who are already using PLUMED, I recommend making a new installation for PLUMED+INDUS.
 
 Once installation is complete, a new action, \texttt{INDUS}, will be available to you the next time you run PLUMED. You can check that the procedure was successful by running the following command:
 
@@ -210,7 +210,7 @@ Once you have installed PLUMED+INDUS, follow the instructions \href{\plumeddoc/_
 
 %%%
 
-\subsection{Installing the Code as a Standalone Program}
+\subsection{Installing INDUS as a Standalone Program}
 
 The INDUS code can be compiled as a standalone program that can analyze XTC files. Before proceeding, you will need to install the \texttt{xdrfile} library written by the GROMACS development team (see \href{http://www.gromacs.org/Developer_Zone/Programming_Guide/XTC_Library}{here}). Make note of where you install it: you will need this information later.
 
@@ -235,7 +235,7 @@ is_mpi_enabled=1
 \section{Using the Code}
 
 
-This section discusses how to use the INDUS code as part of PLUMED, and as a standalone code. Section \ref{sec:input} will discuss the details of the INDUS input file (\texttt{indus.input}). Note that this file is separate from the normal PLUMED input file (\texttt{plumed.dat}) and uses a different syntax. For more on the input syntax for PLUMED, consult the online manual (\plumedmanual).
+This section discusses how to use the INDUS code as part of PLUMED, and as a standalone code. Section \ref{sec:input} will discuss the details of the INDUS input file (\texttt{indus.input}). Note that this file is separate from the normal PLUMED input file (\texttt{plumed.dat}) and uses a different syntax. If you are not familiar with the input syntax for PLUMED, please consult the online manual for your version of choice (\plumedmanual).
 
 %%%
 
@@ -250,9 +250,9 @@ Below is a sample PLUMED input file. Observe that the INDUS input file, \texttt{
 # PLUMED and the INDUS code
 indus: INDUS INPUTFILE=indus.input
 
-# Put a harmonic bias on Ntilde_v of the form U = KAPPA/2*(Ntilde_v - AT),
-# where KAPPA=1.0 kJ/mol and AT=0.0
-restraint: RESTRAINT ARG=indus.ntilde KAPPA=1.0 AT=0.0 
+# Put a harmonic bias on Ntilde_v of the form U = KAPPA/2*(Ntilde_v - AT)^2,
+# where KAPPA=0.5 kJ/mol and AT=3
+restraint: RESTRAINT ARG=indus.ntilde KAPPA=0.5 AT=3.0
 
 # Print some important quantities
 # - indus.n        = N_v
@@ -442,7 +442,7 @@ ProbeVolume = {
 
 \subsection{Biasing $\tilde{N}_v$ Using the INDUS Code's Potential}
 
-As an alternative to using PLUMED's \texttt{RESTRAINT} directly, the INDUS code makes available its own biasing potential of the following general form:
+As an alternative to using PLUMED's \texttt{RESTRAINT} to set the form of the biasing potential, the INDUS code makes available its own biasing potential of the following general form:
 
 \begin{align}
 	\mathcal{U}_{\text{bias}}(x) 
@@ -484,7 +484,7 @@ Bias = {
 
 %%%
 
-Then, in the PLUMED input file, $\mathcal{U}_{\text{bias}} = \mathcal{U}_{\text{bias}}(\tilde{N}_v)$ is passed to \texttt{RESTRAINT} as its \texttt{ARG}:
+Then, in the PLUMED input file, $\mathcal{U}_{\text{bias}} = \mathcal{U}_{\text{bias}}(\tilde{N}_v)$ is passed to \texttt{RESTRAINT} as its \texttt{ARG}. This is done to ensure that the biasing forces are correctly passed to the PLUMED core.
 
 \begin{lstlisting}
 restraint: RESTRAINT ARG=indus.ubias SLOPE=1.0 AT=0.0 KAPPA=0.0
@@ -509,13 +509,13 @@ tf = <$t_f$>
 
 %%%%%%
 
-\subsection{Examples}
+\section{Examples}
 
 %%%
 
-\subsubsection{As Part of PLUMED}
+\subsection{Post-Processing a Trajectory with PLUMED's \texttt{driver}}
 
-Suppose we want to compute $N_v$ and $\tilde{N}_v$ in a cylindrical probe volume with the center of its base at $\mathbf{r}_0 = (2.0, 2.0, 2.0)$ nm with radius $r = 1.0$ nm and height $h = 0.5$ nm. The cylinder is parallel to the $y$-axis and extends from $y_{\text{low}} = 2.0$ nm to $y_{\text{high}} = y_{\text{low}} + h = 2.5$ nm. The target atoms have indices 1, 4, 7, ... , 16498 (i.e. every 3 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. Use the INDUS code's \texttt{Bias} feature to apply a bias of the form $\mathcal{U}_{\text{bias}} = \phi \tilde{N}$ with $\phi = 0.6$ kJ/mol.
+Suppose that we have run an unbiased simulation and would now like to compute $N$ and $\tilde{N}_v$ for each frame of the trajectory, which is saved as an XTC file named \texttt{traj\_comp.xtc}. The probe volume is a cylinder with the center of its base at $\mathbf{r}_0 = (2.0, 2.0, 2.0)$ nm with radius $r = 1.0$ nm and height $h = 0.5$ nm. The cylinder is parallel to the $y$-axis and extends from $y_{\text{low}} = 2.0$ nm to $y_{\text{high}} = y_{\text{low}} + h = 2.5$ nm. The target atoms have indices 1, 4, 7, ... , 16498 (i.e. every 3 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm.
 
 The INDUS input file will be:
 \begin{lstlisting}
@@ -529,18 +529,12 @@ ProbeVolume = {
 	type   = cylinder
 	axis   = y
 	# Dimensions and location
-	center = [ 2.0 2.0 2.0 ]
+	base   = [ 2.0 2.0 2.0 ]
 	radius = 1.0
 	height = 0.5
 	# Coarse-graining
-	sigma = 0.01
+	sigma   = 0.01
 	alpha_c = 0.02
-}
-
-# Add a linear bias
-Bias = {
-	order_parameter = ntilde
-	phi = 0.6
 }
 \end{lstlisting}
 
@@ -549,15 +543,43 @@ Bias = {
 # plumed.dat
 
 # Create an instance of the INDUS action, which computes N_v and Ntilde_v
-indus: INDUS INPUTFILE=<indus.input>
+indus: INDUS INPUTFILE=indus.input
 
-# Pass the bias computed by the INDUS code, U_bias, to PLUMED's RESTRAINT
-# - This is required to invoke the part of PLUMED that passes the biasing forces 
-#   to the MD engine
-# - Using this approach, ARG = U_bias(Ntilde_v) = restraint.bias
-restraint: RESTRAINT ARG=indus.ubias SLOPE=1.0 AT=0.0 KAPPA=0.0
+# Print N_v and Ntilde_v for each frame to a file named 'plumed.out'
+PRINT ...
+	LABEL=print
+	ARG=indus.n,indus.ntilde
+	FILE=plumed.out
+... PRINT
+\end{lstlisting}
 
-# Print N_v, Ntilde_v, and U_bias evert 500 steps
+%%%
+
+PLUMED's \texttt{driver} is invoked as follows:
+
+\begin{lstlisting}
+#!/bin/bash
+
+
+\end{lstlisting}
+
+%%%
+
+\subsection{Running a Biased Simulation with PLUMED}
+
+Suppose we want to run a biased simulation with a linear umbrella sampling potential on $\tilde{N}_v$. The probe volume and target atoms are the same as in the last example. Use PLUMED's \texttt{RESTRAINT} action to apply a bias of the form $\mathcal{U}_{\text{bias}} = \phi \tilde{N}$ with $\phi = 0.6$ kJ/mol.
+
+The INDUS input file is unchanged from before. The PLUMED input now contains an instance of \texttt{RESTRAINT}, as follows:
+\begin{lstlisting}
+# plumed.dat
+
+# Create an instance of the INDUS action, which computes N_v and Ntilde_v
+indus: INDUS INPUTFILE=indus.input
+
+# Put a linear bias on Ntilde_v
+restraint: RESTRAINT ARG=indus.ntilde SLOPE=0.6 AT=0.0
+
+# Print N_v, Ntilde_v, and U_bias every 500 steps
 PRINT ...
 	LABEL=print
 	ARG=indus.n,indus.ntilde,restraint.bias
@@ -568,9 +590,13 @@ PRINT ...
 
 %%%
 
-\subsubsection{Standalone Mode}
+The syntax for passing this PLUMED input file to the MD engine will depend on your choice of MD engine. Please consult the PLUMED manual for details (\plumedmanual).
 
-Compute $N_v$ and $\tilde{N}_v$ in a spherical probe volume center at $\mathbf{r}_0 = (2.5, 2.5, 2.5)$ nm with radius $r = 0.6$ nm. The target atoms have indices 1, 5, 9, ... , 16497 (i.e. every 4 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. Print the time series of $N_v$ and $\tilde{N}_v$ for $t \ge 100$ ps and $t \le 500$ ps. Also print the forces that would be obtained for these frames under a harmonic potential on $\tilde{N}_v$ with $\kappa = 0.89$ kJ/mol and $N^* = -5$.
+%%%
+
+\subsection{Standalone Mode}
+
+Post-process a trajectory stored as an XTC file named \texttt{my\_trajectory.xtc}. Compute $N_v$ and $\tilde{N}_v$ in a spherical probe volume centered at $\mathbf{r}_0 = (2.5, 2.5, 2.5)$ nm and with radius $r = 0.6$ nm. The target atoms have indices 1, 5, 9, ... , 16497 (i.e. every 4 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. Print the time series of $N_v$ and $\tilde{N}_v$ for $t \ge 100$ ps and $t \le 500$ ps. Also print the forces that would be obtained for these frames under a harmonic potential on $\tilde{N}_v$ with $\kappa = 0.98$ kJ/mol and $N^* = -5$.
 
 \begin{lstlisting}
 # indus.input
@@ -584,7 +610,7 @@ ProbeVolume = {
 	center = [ 2.5 2.5 2.5 ]
 	radius = 0.6
 	# Coarse-graining
-	sigma = 0.01
+	sigma   = 0.01
 	alpha_c = 0.02
 }
 
@@ -592,7 +618,7 @@ ProbeVolume = {
 Bias = {
 	order_parameter = ntilde
 	x_star = -5
-	kappa  = 0.89
+	kappa  = 0.98
 }
 
 # XTC file to analyze
@@ -657,7 +683,7 @@ Note that sampling $N_v = 0$ may require you to use windows with $N^* < 0$.
 
 %%%
 
-\subsection{Example: Bulk Water}
+\subsection{Example: Umbrella Sampling in Bulk Water}
 
 To illustrate the heuristics outlined above, I describe here the procedure to compute the free energy as a function of $\tilde{N}$, $F_v(\tilde{N})$, in a sphere (radius $r = 0.6$ nm) in bulk water at 300 K and 1 bar. Since it is infeasible to use standard MD simulations to sample $\tilde{N}$ outside of a narrow range near $\langle N \rangle_0$, an enhanced sampling technique is required. I chose to use umbrella sampling \cite{Torrie1977,Patel2010}.
 
