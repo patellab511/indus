@@ -47,6 +47,9 @@
 	morecomment=[l][\color{blue}]{\#}
 }
 
+% Allow \texttt line wrapping
+\usepackage[htt]{hyphenat}
+
 % Header
 \usepackage{fancyhdr}
 \lhead{} % Remove subsection title from top-left of page
@@ -97,6 +100,8 @@
 \newcommand{\plumedusers}[1][link]{\href{https://groups.google.com/forum/\#!forum/plumed-users}{#1}}
 
 % For PLUMED documentation
+\newcommand{\plumedmanual}[1][link]{\href{https://plumed.github.io/doc.html}{#1}}
+
 \newcommand{\plumeddoc}{https://plumed.github.io/doc-v2.4/user-doc/html}
 \newcommand{\driver}{\href{\plumeddoc/driver.html}{\texttt{driver}}}
 \newcommand{\installplumed}[1][link]{\href{\plumeddoc/_installation.html}{#1}}
@@ -167,12 +172,13 @@ The INDUS code uses the same basic set of units as PLUMED, which also happens to
 
 \section{Getting the Code}
 
-% TODO
-The code is available on GitHub (\repo[link]).
+The code is publicly available on GitHub (\repo[link]).
 
 %%%
 
 \section{Installation}
+
+The following section details the ways in which INDUS can be installed.
 
 %%%
 
@@ -180,7 +186,7 @@ The code is available on GitHub (\repo[link]).
 
 It is recommended that you make use of the INDUS code as an extension to \PLUMED. Make sure that you perform the following steps \textbf{before} configuring and compiling PLUMED! 
 
-A shell script to aid you in the patching process is available in the INDUS code repository at \texttt{plumed\_patch/patch\_plumed.sh}. When you run the script, simply pass to it the location of the root directory of the PLUMED repository (\emph{i.e.} the one that contains the \texttt{Makefile} and so on):
+A shell script to aid you in the patching process is available in the INDUS code repository under \texttt{indus/plumed\_patch/patch\_plumed.sh}. When you run the script, simply pass to it the location of the root directory of the PLUMED repository (\emph{i.e.} the one that contains the \texttt{Makefile} and so on):
 
 \begin{lstlisting}
 ./patch_plumed.sh <location-of-PLUMED-source-code>
@@ -200,7 +206,7 @@ This will print out a list of all the actions and command-line tools registered 
 
 \subsection{Patching PLUMED+INDUS into an MD Code}
 
-Once you have installed PLUMED+INDUS, follow the instructions \href{\plumeddoc/_installation.html#Patching}{here} to add it to your MD engine of choice. Note that a given version of PLUMED only supports certain versions of each MD code. To check which MD codes and versions are supported by each version of PLUMED, check out the online manual (\href{https://plumed.github.io/doc.html}{link}).
+Once you have installed PLUMED+INDUS, follow the instructions \href{\plumeddoc/_installation.html#Patching}{here} to add it to your MD engine of choice. Note that a given version of PLUMED only supports certain versions of each MD code. To check which MD codes and versions are supported by each version of PLUMED, check out the online manual (\plumedmanual).
 
 %%%
 
@@ -229,7 +235,7 @@ is_mpi_enabled=1
 \section{Using the Code}
 
 
-This section discusses how to use the INDUS code as part of PLUMED, and as a standalone code. Note that the INDUS code uses its own input file (\texttt{indus.input}), which is separate from the normal PLUMED input file (\texttt{plumed.dat}) and has its own syntax. Section \ref{sec:input} will discuss the details of the INDUS input file.
+This section discusses how to use the INDUS code as part of PLUMED, and as a standalone code. Section \ref{sec:input} will discuss the details of the INDUS input file (\texttt{indus.input}). Note that this file is separate from the normal PLUMED input file (\texttt{plumed.dat}) and uses a different syntax. For more on the input syntax for PLUMED, consult the online manual (\plumedmanual).
 
 %%%
 
@@ -279,8 +285,17 @@ See Section \ref{sec:input_standalone} for input options particular to running i
 
 \begin{enumerate}
 	\item Only orthorhombic boxes are supported (i.e. rectangular box where the side lengths may differ from each other)
+	
+	\item Periodic boundary conditions (PBCs) in all directions are assumed.
+	
+	\item Unless specified otherwise, probe volumes should not cross the periodic boundaries.
+	
 	\item Only one probe volume may be specified per instance of INDUS.
-	\item You should be able to pass \texttt{indus.ntilde} and \texttt{indus.ubias} to any other PLUMED action with no problems. However, I have not tested this aside from passing \texttt{indus.ntilde} and \texttt{indus.ubias} to \texttt{RESTRAINT}.
+	
+	\item The only indicator/switching functions supported for INDUS are the ones outlined in refs. \cite{Patel2010,Patel2011}. Unlike most of PLUMED's switching functions, these have continuous first derivatives and therefore produce smooth forces.
+	
+	\item You should be able to pass \texttt{indus.ntilde} and \texttt{indus.ubias} to any other PLUMED action with no problems. For example, it should be possible to perform metadynamics with $\tilde{N}_v$. However, I have not tested this aside from passing \texttt{indus.ntilde} and \texttt{indus.ubias} to \texttt{RESTRAINT}.
+	
 	\item I used PLUMED 2.4.0 and GROMACS 2016.3 when writing and testing the code. Any other versions of PLUMED that are 2.2 or higher should work just fine, but I have not tested these and cannot guarantee that they will work. The program should run fine with any simulation package that your favorite PLUMED version supports, but---again---I haven't tested it myself.
 \end{enumerate}
 
@@ -288,7 +303,7 @@ See Section \ref{sec:input_standalone} for input options particular to running i
 
 \section{Input Options}{\label{sec:input}}
 
-This section discusses the syntax of the INDUS input file, which is typically named \texttt{indus.input}.
+This section discusses the syntax of the INDUS input file, which is typically named \texttt{indus.input}. For more on the input syntax for PLUMED, consult the online manual (\plumedmanual).
 
 \emph{Note:} In the following section, angle brackets (\texttt{<>}) are used to indicate places where a value should be placed. The angle brackets themselves are not part of the actual input syntax. Vertical lines (\texttt{|}) are used to enumerate options when only a limited number of values are permitted. For example, \texttt{axis = <x|y|z>} indicates that you must choose \texttt{axis} to be either \texttt{x}, \texttt{y}, or \texttt{z}.
 
@@ -339,7 +354,7 @@ Each key-item pair exists within a scope. The highest scope in the input file is
 
 \subsection{Target Atom Selection}
 
-Target atoms are indicated by the key \texttt{Target} at file scope. This is a unique key (multiple target selections are not permitted).
+Target atoms are indicated by the key \texttt{Target} at file scope. This is a unique key, \emph{i.e.} multiple target selections are not permitted.
 
 \subsubsection{By Index}
 
@@ -363,6 +378,13 @@ Target = [ atom_index  1-16500:4,32000-64000:3 ]
 \subsection{Probe Volume Geometries}
 
 Probe volumes are defined at global scope using the keyword \texttt{ProbeVolume}. Only one probe volume geometry may be specified per instance of INDUS. To define multiple probe volumes using PLUMED, one must create multiple instances of the \texttt{INDUS} action.
+
+Each probe volume definition includes two coarse-graining parameters: $\sigma$
+(\texttt{sigma}) and $\alpha_c$ (\texttt{alpha\_c}). These determine how closely the coarse-grained number of particles, $\tilde{N}$, is correlated with the integer number of particles, $N$. For a detailed explanation, see refs. \cite{Patel2010} and \cite{Patel2012}. In short, choosing smaller values leads to tighter correlation between $\tilde{N}$ and $N$, but larger forces. This can cause instability and simulation crashes if $\sigma$ and/or $\alpha_c$ are chosen too small. 
+
+We recommend the values $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm for simulations of water; these are the defaults if \texttt{sigma} and \texttt{alpha\_c} are omitted from the \texttt{ProbeVolume} definition. In practice, we have found that these values lead to stable simulations with tight correlation between $N$ and $\tilde{N}$, to the extent that we consider the two interchangeable.
+
+The following subsections describe the syntax for the probe volume geometries currently supported.
 
 %%%
 
@@ -420,17 +442,20 @@ ProbeVolume = {
 
 \subsection{Biasing $\tilde{N}_v$ Using the INDUS Code's Potential}
 
-As an alternative to PLUMED's implementation, the INDUS code makes available its own biasing potential of the following general form:
+As an alternative to using PLUMED's \texttt{RESTRAINT} directly, the INDUS code makes available its own biasing potential of the following general form:
 
 \begin{align}
 	\mathcal{U}_{\text{bias}}(x) 
 	&= \mathcal{U}_{\text{harmonic}}(x) + \mathcal{U}_{\text{linear}}(x)
 	     + \mathcal{U}_{\text{left harmonic}}(x) + \mathcal{U}_{\text{right harmonic}}(x) \\
+	\label{eqn:generalbias}
 	&= \frac{1}{2} \kappa (x - x^*)^2 + (\phi x + c)
 	     + k_{\text{left}} \Theta(x_{\text{left}} - x) + k_{\text{right}} \Theta(x - x_{\text{right}})
 \end{align}
 
-\noindent where $\Theta(x)$ is the unit step function, which is zero for $x < 0$ and one for $x \ge 1$. The corresponding syntax for the INDUS input file is:
+\noindent where $\Theta(x)$ is the unit step function, which is zero for $x < 0$ and one for $x \ge 1$. Note that PLUMED supports similar functionality with a combination of the \texttt{RESTRAINT}, \texttt{LOWERWALLS}, and \texttt{UPPERWALLS} actions.
+
+The corresponding syntax for the INDUS input file is:
 
 \begin{lstlisting}
 Bias = {
@@ -490,7 +515,7 @@ tf = <$t_f$>
 
 \subsubsection{As Part of PLUMED}
 
-Suppose we want to compute $N_v$ and $\tilde{N}_v$ in a cylindrical probe volume with the center of its base at $\mathbf{r}_0 = (2.0, 2.0, 2.0)$ nm with radius $r = 1.0$ nm and height $h = 0.5$ nm. The cylinder is parallel to the $y$-axis and extends from $y_{\text{low}} = 2.0$ nm to $y_{\text{high}} = y_{\text{low}} + h = 2.5$ nm. The target atoms have indices 1, 4, 7, ... , 16497 (i.e. every 3 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. Use the INDUS code's \texttt{Bias} feature to apply a bias of the form $\mathcal{U}_{\text{bias}} = \phi \tilde{N}$ with $\phi = 0.6$ kJ/mol.
+Suppose we want to compute $N_v$ and $\tilde{N}_v$ in a cylindrical probe volume with the center of its base at $\mathbf{r}_0 = (2.0, 2.0, 2.0)$ nm with radius $r = 1.0$ nm and height $h = 0.5$ nm. The cylinder is parallel to the $y$-axis and extends from $y_{\text{low}} = 2.0$ nm to $y_{\text{high}} = y_{\text{low}} + h = 2.5$ nm. The target atoms have indices 1, 4, 7, ... , 16498 (i.e. every 3 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. Use the INDUS code's \texttt{Bias} feature to apply a bias of the form $\mathcal{U}_{\text{bias}} = \phi \tilde{N}$ with $\phi = 0.6$ kJ/mol.
 
 The INDUS input file will be:
 \begin{lstlisting}
@@ -584,7 +609,7 @@ PrintForces = yes
 
 % BIASING PARAMETERS
 
-\section{Choice of Biasing Parameters}
+\section{Choice of Biasing Parameters for Umbrella Sampling}
 
 When performing umbrella sampling with $\tilde{N}_v$, we use the statistics of $N_v$ in the liquid basin in an unbiased simulation to guide our choice of biasing parameters. This is important for obtaining accurate results.
 
@@ -596,7 +621,7 @@ Let the average and variance of $N_v$ in the liquid basin be $\langle N_v \rangl
 
 Suppose that we want to bias $\tilde{N}_v$ using a harmonic potential,
 
-\begin{equation}
+\begin{equation} \label{eqn:harmonicbias}
 	\mathcal{U}_{\text{bias}}(\tilde{N}_v) = \frac{1}{2} \kappa (\tilde{N}_v - N^*)^2,
 \end{equation}
 
@@ -621,7 +646,9 @@ Accurate WHAM results require overlap between adjacent windows. For a desired ov
 \noindent where $\beta = (\kB T)^{-1}$. For an initial guess, we typically choose $\alpha = 2$ and $\Delta F_{\text{overlap}} = 4 \ k_{\text{B}} T$. This leads to:
 
 \begin{align}
-	\kappa &= 2 \kappa_0 \\
+	\label{eqn:kapparule}
+	\kappa &= 2 \kappa_0  \\
+	\label{eqn:nstarrule}
 	\Delta N^* &= \frac{4}{\sqrt{3}} \sqrt{ \langle (\delta N_v)^2 \rangle_0 }
 \end{align}
 
@@ -632,23 +659,15 @@ Note that sampling $N_v = 0$ may require you to use windows with $N^* < 0$.
 
 \subsection{Example: Bulk Water}
 
-Figure \ref{fig:fvn_bulk} illustrates $F_v( \tilde{N} )$ in a small sphere in bulk water. The free energy distribution was produced using UWHAM \cite{Tan2012}. The aforementioned heuristics were used to choose the biasing parameters.
+To illustrate the heuristics outlined above, I describe here the procedure to compute the free energy as a function of $\tilde{N}$, $F_v(\tilde{N})$, in a sphere (radius $r = 0.6$ nm) in bulk water at 300 K and 1 bar. Since it is infeasible to use standard MD simulations to sample $\tilde{N}$ outside of a narrow range near $\langle N \rangle_0$, an enhanced sampling technique is required. I chose to use umbrella sampling \cite{Torrie1977,Patel2010}.
 
-% TODO
-% Citations
-% - WHAM (Hummer & Zhu, or Levy UWHAM)
-% - SPC/E water
-% - GROMACS (which article?)
-% Include Indus input file
-% Used GROMACS 2016.3
-% - Parrinello-Rahman barostat and V-rescale thermostat
-% - PME
-% List biasing parameters used (kappa, nstar-values, sigma, alpha_c, ...)
-% - kappa = 0.89 kJ/mol
-% - nstar = 24.3, 18.8, 13.3, 7.8, 2.3, -3.2, -8.7
-% - delta_nstar = 5.5
-% - Stats: avg_N_0 = 29.8, var_N_0 = 5.59247, std_dev_N_0 = 2.36484
-% - All simulations run for 2 ns (tossed out 500 ps for unbiased, 200 ps for biased)
+All simulations were performed using GROMACS 2016.3 \cite{VanDerSpoel2005}, patched with an installation of PLUMED+INDUS based on PLUMED 2.4.0 \cite{Tribello2014}. The simulation consisted of about 4,000 SPC/E water molecules \cite{Berendsen1987} in a square box. The temperature was maintained at $T = 300$ K using the stochastic velocity rescale thermostat \cite{Bussi2007} with a time constant of $\tau_T = 0.5$ ps, and the pressure was maintained at $P = 1$ bar using an isotropic Parrinello-Rahman barostat \cite{Parrinello1981} with time constant $\tau_P = 2$ ps. The simulation was run for 2 ns with the leapfrog integrator and a time step of 2 fs. Samples were taken every 1 ps (500 steps).
+
+First, I performed an unbiased simulation to guide the choice of biasing parameters for a harmonic potential (see Equation \ref{eqn:harmonicbias}). I discarded the first 500 ps and used the remaining frames to compute $\langle N_v \rangle_0 \approx 29.836$ and $\langle (\delta N_v)^2 \rangle_0 \approx 4.8927$. From this, I computed $\kappa = 0.89$ kJ/mol and $\Delta N^* = 5.5$ using Equations \ref{eqn:kapparule} and \ref{eqn:nstarrule}. 
+
+Using these parameters, I ran a series of biased simulations with $N^* = 24.3, 18.8, 13.3, 7.8, 2.3, -3.2, \text{ and} -8.7$ for 2 ns each. The INDUS coarse-graining parameters were $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. I discarded the first 200 ps of each trajectory and used the remaining data to compute the unbiased free energy distribution, $F_v( \tilde{N} )$, using UWHAM \cite{Tan2012}. Figure \ref{fig:fvn_bulk} illustrates the results. Note that if the free energy as a function of $N$ is desired, these results can be reweighted to obtain $F_v(N)$ (see ref. \cite{Patel2010}).
+
+%%%
 
 \begin{figure}
 	\label{fig:fvn_bulk}
@@ -657,6 +676,43 @@ Figure \ref{fig:fvn_bulk} illustrates $F_v( \tilde{N} )$ in a small sphere in bu
 	\captionsetup{width=0.8\linewidth}
 	\caption{\label{fig:fvn_bulk}The free energy landscape for the coarse-grained number of waters, $\tilde{N}$, in a small probe volume in bulk water at $T = 300$ K and $P = 1$ bar. The probe volume, $v$, is a sphere of radius $r = 0.6$ nm in a box of about $4,000$ SPC/E water molecules.}
 \end{figure}
+
+%%%
+
+% DEVELOPMER NOTES
+
+\section{Developer Notes}
+
+This section is intended for those who wish to implement new probe volume geometries and/or understand the inner workings of the INDUS code. A working understanding of C++ is assumed. 
+
+\textbf{NOTE:} This section currently under construction.
+
+%%%
+
+\section{Adding New Probe Volumes}
+
+Implementing a new probe volume geometry is relatively simple. All geometries must be derived classes of abstract base class \texttt{ProbeVolume}, which handles the interface between particular geometries and the rest of the code. New probe volumes must implement the following methods:
+
+\begin{itemize}
+	\item Constructor
+	\item \texttt{isInProbeVolume}: given the position of a particle $i$, computes indicator functions $h_v(i)$ and $\tilde{h}_v(i)$, and derivatives $\partial \tilde{h}_v(i) \partial \mathbf{r}_i$.
+\end{itemize}
+
+%%%
+
+\subsection{What are the "shells"?}
+
+%%%
+
+\section{Parallelization with MPI}
+
+% TODO
+How the code makes use of MPI to support limited parallelization within the PLUMED framework.
+
+%%%
+
+
+
 
 % REFERENCES
 
