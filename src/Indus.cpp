@@ -476,7 +476,7 @@ void Indus::do_indus_standalone()
 		             << "#     Var_n_v     " << var_n_v       << "\n"
 		             << "#     Stdev_n_v   " << sqrt(var_n_v) << "\n"
 		             << "#     kappa_0_n_v " << kappa_0_n_v   << " [kBT]\n"
-		             << "#   Suggested biasing parameters (2*kappa_0 and 2kBT overlap rules of thumb)\n"
+		             << "#   Suggested biasing parameters (2*kappa_0 and 4kBT overlap rules of thumb)\n"
 		             << "#     kappa_n_v      " << kappa_n_v      << " [kBT]\n"
 		             << "#     delta_n_v_star " << delta_n_v_star << "\n"
 		             << " " << "\n";
