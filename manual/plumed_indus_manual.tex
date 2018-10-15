@@ -382,7 +382,7 @@ Probe volumes are defined at global scope using the keyword \texttt{ProbeVolume}
 Each probe volume definition includes two coarse-graining parameters: $\sigma$
 (\texttt{sigma}) and $\alpha_c$ (\texttt{alpha\_c}). These determine how closely the coarse-grained number of particles, $\tilde{N}$, is correlated with the integer number of particles, $N$. For a detailed explanation, see refs. \cite{Patel2010} and \cite{Patel2012}. In short, choosing smaller values leads to tighter correlation between $\tilde{N}$ and $N$, but larger forces. This can cause instability and simulation crashes if $\sigma$ and/or $\alpha_c$ are chosen too small. 
 
-We recommend the values $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm for simulations of water; these are the defaults if \texttt{sigma} and \texttt{alpha\_c} are omitted from the \texttt{ProbeVolume} definition. In practice, we have found that these values lead to stable simulations with tight correlation between $N$ and $\tilde{N}$, to the extent that we consider the two interchangeable.
+We recommend the values $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm for simulations of water; these are the defaults if \texttt{sigma} and \texttt{alpha\_c} are omitted from the \texttt{ProbeVolume} definition. In practice, we have found that these values lead to stable simulations with tight correlation between $N$ and $\tilde{N}$, to the extent that we consider the two essentially interchangeable.
 
 The following subsections describe the syntax for the probe volume geometries currently supported.
 
@@ -663,9 +663,9 @@ To illustrate the heuristics outlined above, I describe here the procedure to co
 
 All simulations were performed using GROMACS 2016.3 \cite{VanDerSpoel2005}, patched with an installation of PLUMED+INDUS based on PLUMED 2.4.0 \cite{Tribello2014}. The simulation consisted of about 4,000 SPC/E water molecules \cite{Berendsen1987} in a square box. The temperature was maintained at $T = 300$ K using the stochastic velocity rescale thermostat \cite{Bussi2007} with a time constant of $\tau_T = 0.5$ ps, and the pressure was maintained at $P = 1$ bar using an isotropic Parrinello-Rahman barostat \cite{Parrinello1981} with time constant $\tau_P = 2$ ps. The simulation was run for 2 ns with the leapfrog integrator and a time step of 2 fs. Samples were taken every 1 ps (500 steps).
 
-First, I performed an unbiased simulation to guide the choice of biasing parameters for a harmonic potential (see Equation \ref{eqn:harmonicbias}). I discarded the first 500 ps and used the remaining frames to compute $\langle N_v \rangle_0 \approx 29.836$ and $\langle (\delta N_v)^2 \rangle_0 \approx 4.8927$. From this, I computed $\kappa = 0.89$ kJ/mol and $\Delta N^* = 5.5$ using Equations \ref{eqn:kapparule} and \ref{eqn:nstarrule}. 
+First, I performed an unbiased simulation to guide the choice of biasing parameters for a harmonic potential (see Equation \ref{eqn:harmonicbias}). I discarded the first 500 ps and used the remaining frames to compute $\langle N_v \rangle_0 \approx 30$ and $\langle (\delta N_v)^2 \rangle_0 \approx 5.09855$. From this, I computed $\kappa \approx 0.98$ kJ/mol and $\Delta N^* \approx 5$ using Equations \ref{eqn:kapparule} and \ref{eqn:nstarrule}. 
 
-Using these parameters, I ran a series of biased simulations with $N^* = 24.3, 18.8, 13.3, 7.8, 2.3, -3.2, \text{ and} -8.7$ for 2 ns each. The INDUS coarse-graining parameters were $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. I discarded the first 200 ps of each trajectory and used the remaining data to compute the unbiased free energy distribution, $F_v( \tilde{N} )$, using UWHAM \cite{Tan2012}. Figure \ref{fig:fvn_bulk} illustrates the results. Note that if the free energy as a function of $N$ is desired, these results can be reweighted to obtain $F_v(N)$ (see ref. \cite{Patel2010}).
+Using these parameters, I ran a series of biased simulations with $N^* = 25, 20, 15, 10, 5, 0, \text{ and } -5$ for 2 ns each. The INDUS coarse-graining parameters were $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm. I discarded the first 200 ps of each trajectory and used the remaining data (along with the data from the unbiased simulation) to compute the unbiased free energy distribution, $F_v( \tilde{N} )$, using UWHAM \cite{Tan2012}. Figure \ref{fig:fvn_bulk} illustrates the results. Note that if the free energy as a function of $N$ is desired, these results can be reweighted to obtain $F_v(N)$ (see ref. \cite{Patel2010}).
 
 %%%
 
@@ -689,7 +689,7 @@ This section is intended for those who wish to implement new probe volume geomet
 
 %%%
 
-\section{Adding New Probe Volumes}
+\subsection{Adding New Probe Volumes}
 
 Implementing a new probe volume geometry is relatively simple. All geometries must be derived classes of abstract base class \texttt{ProbeVolume}, which handles the interface between particular geometries and the rest of the code. New probe volumes must implement the following methods:
 
@@ -700,11 +700,11 @@ Implementing a new probe volume geometry is relatively simple. All geometries mu
 
 %%%
 
-\subsection{What are the "shells"?}
+\subsubsection{What are the "shells"?}
 
 %%%
 
-\section{Parallelization with MPI}
+\subsection{Parallelization with MPI}
 
 % TODO
 How the code makes use of MPI to support limited parallelization within the PLUMED framework.
