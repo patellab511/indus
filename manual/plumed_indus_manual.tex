@@ -192,7 +192,7 @@ A shell script to aid you in the patching process is available in the INDUS code
 ./patch_plumed.sh <location-of-PLUMED-source-code>
 \end{lstlisting}
 
-Then simply configure, compile, and install PLUMED normally. For instructions on how to install PLUMED, see \installplumed[here]. For those who are already using PLUMED, I recommend making a new installation for PLUMED+INDUS.
+Then simply configure, compile, and install PLUMED normally. For instructions on how to install PLUMED, see \installplumed[here]. For those who are already using PLUMED, I recommend making a separate installation for PLUMED+INDUS.
 
 Once installation is complete, a new action, \texttt{INDUS}, will be available to you the next time you run PLUMED. You can check that the procedure was successful by running the following command:
 
@@ -555,13 +555,13 @@ PRINT ...
 
 %%%
 
-PLUMED's \texttt{driver} is invoked as follows:
+PLUMED's \texttt{driver} can be invoked from the command line as follows:
 
 \begin{lstlisting}
-#!/bin/bash
-
-
+plumed driver --plumed "plumed.dat" --ixtc "traj_comp.xtc"
 \end{lstlisting}
+
+For more \texttt{driver} options---including how to post-process trajectories in other file formats---please consult the PLUMED manual.
 
 %%%
 

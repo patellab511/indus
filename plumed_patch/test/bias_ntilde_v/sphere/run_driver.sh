@@ -10,6 +10,6 @@ $plumed_exe driver \
 	--ixtc ${xtc_file} \
 	--dump-forces "forces.out" --dump-full-virial
 
-if [ -f "bck.*" ]; then
+if [ -f bck.* ]; then
 	rm bck.*
 fi

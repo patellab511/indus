@@ -14,7 +14,6 @@ ProbeVolume::ProbeVolume(ProbeVolumeInputPack& input_pack)
    width_shell_1_(0.0),
    width_shell_2_(0.0),
    // Flags
-   is_dynamic_(false),
    need_derivatives_( input_pack.need_derivatives )
 {
 	const ParameterPack& input_parameter_pack = input_pack.input_parameter_pack;
@@ -25,9 +24,6 @@ ProbeVolume::ProbeVolume(ProbeVolumeInputPack& input_pack)
 	//input_parameter_pack.readNumber("sigma",   KeyType::Optional, sigma_);
 	//input_parameter_pack.readNumber("alpha_c", KeyType::Optional, alpha_c_);
 	//switching_function_.setParameters(sigma_, alpha_c_);
-
-	// Flags
-	input_parameter_pack.readFlag("is_dynamic", KeyType::Optional, is_dynamic_);
 }
 
 

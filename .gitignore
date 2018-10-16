@@ -33,6 +33,10 @@
 # bin directories
 **/bin
 
+# Temporary directories
+**/tmp
+*/temp
+
 # misc. directories
 bck/
 misc/

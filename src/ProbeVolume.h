@@ -82,11 +82,6 @@ class ProbeVolume
 
 	// Update probe volume parameters for each time step using state variables 
 	// from SimulationState (e.g. box matrix, atom positions, etc.)
-	// - Examples of usage
-	//   - Dynamic probe volumes based on atom positions must be updated at each time
-	//     step as the atoms positions change
-	//   - ProbeVolume's implementation often needs to know the box lengths in order to
-	//     properly implement probe volumes which can cross the periodic boundaries
 	virtual void updateUsingSimulationState() = 0;
 
 	// Checks whether the particle is in the probe volume
@@ -106,8 +101,6 @@ class ProbeVolume
 	// - Default: the entire SimulationBox
 	// - Must encompass the furthest extent of the shells (including coarse-
 	//   graining width)
-	// - TODO could there be problems when the ProbeVolume crosses PBCs?
-	//   (e.g. dynamic union of spheres)
 	virtual void setBoundingBox();
 
 	// Returns a string with complete, formatted information about the probe volume's
@@ -210,7 +203,6 @@ class ProbeVolume
 	// Vectors for local INDUS atoms
 	// - These are atoms in vtilde which are in the local DD cell
 	// - Derivatives of htilde_v are with respect to the corresponding atom position
-	//   TODO DYNAMIC: store derivatives wrt. probe volume atoms separately
 	std::vector<int>    local_atom_global_indices_;
 	std::vector<int>    local_atom_group_indices_;
 	std::vector<double> htilde_v_;
@@ -241,7 +233,6 @@ class ProbeVolume
 	double width_shell_1_, width_shell_2_;
 
 	// Flags
-	bool is_dynamic_;
 	bool need_derivatives_;
 
 
