@@ -80,12 +80,10 @@ void ProbeVolume_Box::setCoarseGrainingParameters(const double sigma, const doub
 }
 
 
-void ProbeVolume_Box::setShellParameters(
-		const double width_shell_1, const double width_shell_2, const double alpha_c_shells) 
+void ProbeVolume_Box::setShellWidths(const double width_shell_1, const double width_shell_2)
 {
 	width_shell_1_  = width_shell_1;
 	width_shell_2_  = width_shell_2;
-	alpha_c_shells_ = alpha_c_shells;
 
 	// Update related member variables
 	this->setGeometry(box_offset_, box_matrix_);
@@ -105,10 +103,8 @@ void ProbeVolume_Box::setGeometry(const Real3& box_offset, const Box& box_matrix
 
 		box_half_lengths_[d] = 0.5*box_matrix_[d][d];
 		box_half_lengths_eff_[d] = box_half_lengths_[d] + alpha_c_;
-		box_shell_1_half_lengths_eff_[d] = box_half_lengths_eff_[d] + 
-		                                  (width_shell_1_ + alpha_c_shells_);
-		box_shell_2_half_lengths_eff_[d] = box_shell_1_half_lengths_eff_[d] + 
-		                                  (width_shell_2_ + alpha_c_shells_);
+		box_shell_1_half_lengths_eff_[d] = box_half_lengths_eff_[d] + width_shell_1_;
+		box_shell_2_half_lengths_eff_[d] = box_shell_1_half_lengths_eff_[d] + width_shell_2_;
 
 		// Switching function bounds
 		switching_functions_shifted_box_[d].setLimits( -box_half_lengths_[d], box_half_lengths_[d] );
@@ -119,9 +115,9 @@ void ProbeVolume_Box::setGeometry(const Real3& box_offset, const Box& box_matrix
 
 
 void ProbeVolume_Box::updateUsingSimulationState() 
-{
-	// Nothing to do for this geometry
-	return;
+{ 
+	// Nothing to do for this probe volume geometry
+	return; 
 }
 
 

@@ -13,12 +13,21 @@ ProbeVolume::ProbeVolume(ProbeVolumeInputPack& input_pack)
    // Shells
    width_shell_1_(0.0),
    width_shell_2_(0.0),
-   alpha_c_shells_(0.0),
    // Flags
+   is_dynamic_(false),
    need_derivatives_( input_pack.need_derivatives )
 {
 	const ParameterPack& input_parameter_pack = input_pack.input_parameter_pack;
 	using KeyType = ParameterPack::KeyType;
+
+	// FIXME delete?
+	// Coarse-graining parameters
+	//input_parameter_pack.readNumber("sigma",   KeyType::Optional, sigma_);
+	//input_parameter_pack.readNumber("alpha_c", KeyType::Optional, alpha_c_);
+	//switching_function_.setParameters(sigma_, alpha_c_);
+
+	// Flags
+	input_parameter_pack.readFlag("is_dynamic", KeyType::Optional, is_dynamic_);
 }
 
 
@@ -147,11 +156,9 @@ std::string ProbeVolume::getSharedAttributesSummary() const
 	ss << "#   Coarse-graining\n"
 		 << "#     sigma            = " << sigma_   << " [nm]\n"
 	   << "#     alpha_c          = " << alpha_c_ << " [nm]\n"
-	   << "#     Weight_threshold = " << WEIGHT_THRESHOLD_ << "\n"
 	   << "#   Shells\n"
 	   << "#     width_shell_1  = " << width_shell_1_   << " [nm]\n"
-	   << "#     width_shell_2  = " << width_shell_2_   << " [nm]\n"
-		 << "#     alpha_c_shells = " << alpha_c_shells_ << " [nm]\n";
+	   << "#     width_shell_2  = " << width_shell_2_   << " [nm]\n";
 
 	return ss.str();
 }

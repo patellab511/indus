@@ -307,7 +307,7 @@ class InputParser
 	// Parses a vector of strings from the TokenStream
 	// - Assumes that the opening bracket, [,  has already been parsed
 	//   -  TODO place the bracket back into the line_stream before calling?
-	// - Reads until encountering the closing brace, }, in its scope
+	// - Reads until encountering the next closing bracket, ]
 	TokenStream::Status parseVector(
 		TokenStream& token_stream,
 		std::vector<std::string>& vec
@@ -316,7 +316,7 @@ class InputParser
 	// Parses a ParameterPack from the TokenStream
 	// - Assumes that the opening brace, {,  has already been parsed
 	//   -  TODO place the brace back into the line_stream before calling?
-	// - Reads until encountering the closing brace, ], in its scope
+	// - Reads until encountering the closing brace, }, in its scope
 	TokenStream::Status parseParameterPack(
 		TokenStream&   token_stream,
 		ParameterPack& parameter_pack

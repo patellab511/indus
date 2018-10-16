@@ -37,20 +37,16 @@ class ProbeVolume_Box : public ProbeVolume
 		const double alpha_c
 	);
 
-	virtual void setCoarseGrainingParameters(
-			const double sigma, const double alpha_c
-	) override;
+	virtual void setCoarseGrainingParameters(const double sigma, const double alpha_c) override;
 
-	virtual void setShellParameters(
-			const double width_shell_1, const double width_shell_2, const double alpha_c_shells
-	) override;
+	virtual void setShellWidths(const double width_shell_1, const double width_shell_2) override;
 
 	void setGeometry(
 		const Real3& box_offset,  // Position of lower-left corner: {x, y, z}
 		const Box&   box_matrix   // Size and shape of box
 	);
 
-	// Updates the box lengths for ProbeVolume
+	// Updates the probe volume for each time step
 	virtual void updateUsingSimulationState() override;
 
 	virtual bool isInProbeVolume(

@@ -32,8 +32,8 @@ class ProbeVolume_Sphere : public ProbeVolume
 			const double sigma, const double alpha_c
 	) override;
 
-	virtual void setShellParameters(
-			const double width_shell_1, const double width_shell_2, const double alpha_c_shells
+	virtual void setShellWidths(
+			const double width_shell_1, const double width_shell_2
 	) override;
 
 	void setGeometry(
@@ -66,12 +66,7 @@ class ProbeVolume_Sphere : public ProbeVolume
 	// - The switching function is zero at: r_eff = r + alpha_c
 	double r_eff_, r_eff_sq_;
 
-	// Radius of nearest neighbor shells around atoms, and their buffer size [nm]
-	// - Used to determine buffer sizes
-	double r_neighborSphere_;  // FIXME delete?
-	double alpha_c_nn_;       // buffer size
-
-	// Define "shells" around the probe volume
+	// Define shells around the probe volume
 	// - This is useful for efficiently locating atoms NEAR the probe volume
 	double r_shell_1_, r_shell_1_sq_;
 	double r_shell_2_, r_shell_2_sq_;

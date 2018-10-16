@@ -7,7 +7,7 @@ Indus::Indus(const std::string& input_file)
    simulation_state_(),
    // Domain decomposition/MPI
    mpi_communicator_( MpiCommunicator::get_mpi_comm_world() ),
-   domain_decomposition_( std::array<int,DIM_>({{1, 1, 1}}), 0.0, 0.0, 0.0, 
+   domain_decomposition_( std::array<int,DIM_>({{1, 1, 1}}), 0.0, 0.0,
                           simulation_state_, mpi_communicator_ ),
    my_rank_( mpi_communicator_.get_rank() ),
    master_rank_( mpi_communicator_.get_master_rank() ),
@@ -175,8 +175,8 @@ Indus::Indus(const std::string& input_file)
 	domain_decomposition_.set_grid_dimensions( dd_grid_dimensions );
 
 	// Set shell parameters
-	double width_shell_1 = 0.0, width_shell_2 = 0.0, alpha_c_shells = 0.0;
-	domain_decomposition_.setShellParameters(width_shell_1, width_shell_2, alpha_c_shells);
+	double width_shell_1 = 0.0, width_shell_2 = 0.0;
+	domain_decomposition_.setShellWidths(width_shell_1, width_shell_2);
 
 
 	//----- Derivatives Setup -----//

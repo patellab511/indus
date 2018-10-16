@@ -15,11 +15,9 @@
 #   Coarse-graining
 #     sigma            = 0.01 [nm]
 #     alpha_c          = 0.02 [nm]
-#     Weight_threshold = 0.5
 #   Shells
 #     width_shell_1  = 0 [nm]
 #     width_shell_2  = 0 [nm]
-#     alpha_c_shells = 0 [nm]
 #
 # Target_Atoms_String = atom_index 1-16500:4
 # Gro_File = 

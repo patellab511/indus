@@ -31,8 +31,8 @@ class ProbeVolume_Cylinder : public ProbeVolume
 			const double sigma, const double alpha_c
 	) override;
 
-	virtual void setShellParameters(
-			const double width_shell_1, const double width_shell_2, const double alpha_c_shells
+	virtual void setShellWidths(
+			const double width_shell_1, const double width_shell_2
 	) override;
 
 	void setGeometry(
@@ -46,11 +46,12 @@ class ProbeVolume_Cylinder : public ProbeVolume
 
 	virtual bool isInProbeVolume(
 		const Real3& x,
+		// Output
 		double& h_v,
 		double& htilde_v, 
-		Real3& derivatives,
-		bool& is_in_shell_1, 
-		bool& is_in_shell_2
+		Real3&  derivatives,
+		bool&   is_in_shell_1, 
+		bool&   is_in_shell_2
 	) const override;
 
 	// Returns a string with complete, formatted information about the probe volume's
@@ -61,8 +62,8 @@ class ProbeVolume_Cylinder : public ProbeVolume
  private:
 	// Cylinder geometry (nominal and effective)
 	// - Effective probe volume includes smoothing over alpha_c
-	Real3 x_base_;      // Position of base: {x,y,z}
-	Real3 center_;      // Center point: {x,y,z}
+	Real3  x_base_;     // Position of base: {x,y,z}
+	Real3  center_;     // Center point: {x,y,z}
 	double r_, r_eff_;  // radius
 	double h_, h_eff_;  // height
 	double zeta_min_, zeta_max_; // Bounds along cylinder axis

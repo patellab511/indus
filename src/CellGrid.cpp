@@ -6,6 +6,7 @@
 #include "CellGrid.h"
 
 
+// Constructor for NeighborList mode
 CellGrid::CellGrid(const double r_cutoff, const double cell_side_length, 
                    const SimulationState& simulation_state, MpiCommunicator& mpi_communicator
 )
@@ -21,19 +22,43 @@ CellGrid::CellGrid(const double r_cutoff, const double cell_side_length,
 }
 
 
+// Constructor for DomainDecomposition mode
 CellGrid::CellGrid(const Int3&  grid_dimensions, const double width_shell_1, const double width_shell_2,
-                   const double alpha_c_shells, const SimulationState& simulation_state,
-                   MpiCommunicator& mpi_communicator)
+                   const SimulationState& simulation_state, MpiCommunicator& mpi_communicator)
  : partition_type_( PartitionType::SimulationBoxDomainDecomposition ),
    width_shell_1_( width_shell_1 ),
    width_shell_2_( width_shell_2 ),
-   alpha_c_shells_( alpha_c_shells ),
    grid_dimensions_ ( grid_dimensions ),
    simulation_state_( simulation_state ),
    simulation_box_( simulation_state.get_simulation_box() ),
    mpi_communicator_( mpi_communicator )
 {
-	// TODO anything here? input checks?
+	// Default: grid the entire simulation box
+	setCellGridRegion();
+
+	//-----  Create a probe box to represent the local DD cell -----//
+
+	// No coarse-graining or derivatives required
+	double sigma = 0.0, alpha_c = 0.0;  // No coarse-graining for cell
+	bool   need_derivatives = false;
+
+	// Probe volume base class requires a ParameterPack 
+	ParameterPack probe_volume_input_pack("CellGridProbeVolume");
+	ProbeVolume::ProbeVolumeInputPack input_pack = {
+		probe_volume_input_pack,
+		simulation_state_,
+		mpi_communicator_,
+		need_derivatives
+	};
+
+	// Initialize with dummy geometry that will be overwritten later
+	Real3 x_lower_tmp;  x_lower_tmp.fill(0.0);
+	Box box_matrix_tmp;
+	simulation_box_.getBoxMatrix( box_matrix_tmp );
+	local_cell_probe_volume_ptr_ = std::unique_ptr<ProbeVolume_Box>(
+		new ProbeVolume_Box{ input_pack, x_lower_tmp, box_matrix_tmp, sigma, alpha_c }
+	);
+	local_cell_probe_volume_ptr_->setShellWidths(width_shell_1_, width_shell_2_);
 }
 
 
@@ -632,34 +657,16 @@ void CellGrid::findNearbyAtoms(
 		throw std::runtime_error("bad cell index: unable to find local atoms");
 	}
 
-	//----- Create ProbeVolume for the Cell -----//
-
-	// TODO Make a persistent member variable
-
-	double sigma = 0.0, alpha_c = 0.0;  // No coarse-graining for cell
-	bool   need_derivatives = false;
-
-	ParameterPack probe_volume_input_pack("CellGridProbeVolume");
-
-	ProbeVolume::ProbeVolumeInputPack input_pack = {
-		probe_volume_input_pack,
-		simulation_state_,
-		mpi_communicator_,
-		need_derivatives
-	};
-
+	// Update local cell
 	const Cell& local_cell = cells_[cell_index];
-
-	ProbeVolume_Box cell_probe_volume(input_pack, local_cell.x_lower, local_cell.box_matrix, 
-	                                  sigma, alpha_c);
-	cell_probe_volume.setShellParameters(width_shell_1_, width_shell_2_, alpha_c_shells_);
+	local_cell_probe_volume_ptr_->setGeometry(local_cell.x_lower, local_cell.box_matrix);
 
 
 	//----- Search for Local Atoms -----//
 
 	// Get handles to necessary AtomGroup member variables
-	const std::vector<Real3>&          atom_positions = atom_group.get_atom_positions();
-	std::vector<AtomGroup::NearbyAtom>& nearby_atoms    = atom_group.access_nearby_atoms();
+	const std::vector<Real3>&           atom_positions = atom_group.get_atom_positions();
+	std::vector<AtomGroup::NearbyAtom>& nearby_atoms   = atom_group.access_nearby_atoms();
 	nearby_atoms.resize(0);
 
 	// Working variables
@@ -675,7 +682,7 @@ void CellGrid::findNearbyAtoms(
 		simulation_box_.putInBox(position);
 
 		// Check this cell
-		is_in_local_cell = cell_probe_volume.isInProbeVolume(
+		is_in_local_cell = local_cell_probe_volume_ptr_->isInProbeVolume(
 					position, h_v, dummy_htilde_v, dummy_derivatives,
 					is_in_local_cell_shell_1, is_in_local_cell_shell_2);
 
@@ -700,7 +707,7 @@ void CellGrid::findNearbyAtoms(
 			// Store the local atom's index and classification
 			nearby_atoms.push_back( 
 				AtomGroup::NearbyAtom{ i, is_in_local_cell, 
-				                      is_in_local_cell_shell_1, is_in_local_cell_shell_2 }
+				                       is_in_local_cell_shell_1, is_in_local_cell_shell_2 }
 			);
 		}
 	}
@@ -710,7 +717,7 @@ void CellGrid::findNearbyAtoms(
 
 	/*
 	int num_nearby_atoms = nearby_atoms.size();
-	std::cout << "\n" << cell_probe_volume.getInputSummary() << "\n"
+	std::cout << "\n" << local_cell_probe_volume_ptr_->getInputSummary() << "\n"
 	          << "  num_nearby_atoms = " << num_nearby_atoms << "\n";
 
 	// Copy local atom indices

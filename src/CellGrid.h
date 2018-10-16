@@ -108,7 +108,6 @@ class CellGrid
 		const Int3&  grid_dimensions, 
 		const double width_shell_1,
 		const double width_shell_2, 
-		const double alpha_c_shells, 
 		const SimulationState& simulation_state,
 		MpiCommunicator& mpi_communicator
 	);
@@ -196,12 +195,16 @@ class CellGrid
 		grid_dimensions_ = grid_dimensions;
 	}
 
-	void setShellParameters(const double width_shell_1, const double width_shell_2, 
-	                        const double alpha_c_shells)
+	void setShellWidths(const double width_shell_1, const double width_shell_2)
 	{
 		width_shell_1_  = width_shell_1;
 		width_shell_2_  = width_shell_2;
-		alpha_c_shells_ = alpha_c_shells;
+
+		if ( local_cell_probe_volume_ptr_ != nullptr ) {
+			// Set shell widths for probe box representing local DD cell
+			local_cell_probe_volume_ptr_->setShellWidths(width_shell_1_, width_shell_2_);
+		}
+
 	}
 
 	double get_r_cutoff() const { return r_cutoff_; }
@@ -231,10 +234,12 @@ class CellGrid
 	// Cutoff for neighbor list creation 
 	double r_cutoff_ = 0.0, r_cutoff_sq_ = 0.0;
 
-	// Neighbor shells for domain decomposition
+	// Shells widths (for domain decomposition)
 	double width_shell_1_  = 0.0;
 	double width_shell_2_  = 0.0;
-	double alpha_c_shells_ = 0.0;
+
+	// Probe box which represents the local cell (for domain decomposition)
+	std::unique_ptr<ProbeVolume_Box> local_cell_probe_volume_ptr_ = nullptr;
 
 	// Box matrix describing the "model" individual cell
 	// - Most cells created from this template will have the same size and shape. 

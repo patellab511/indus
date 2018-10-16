@@ -76,12 +76,10 @@ void ProbeVolume_Cylinder::setCoarseGrainingParameters(const double sigma, const
 }
 
 
-void ProbeVolume_Cylinder::setShellParameters(
-		const double width_shell_1, const double width_shell_2, const double alpha_c_shells)
+void ProbeVolume_Cylinder::setShellWidths(const double width_shell_1, const double width_shell_2)
 {
 	width_shell_1_  = width_shell_1;
 	width_shell_2_  = width_shell_2;
-	alpha_c_shells_ = alpha_c_shells;
 
 	// Update geometry for new shell widths
 	this->setGeometry(x_base_, r_, h_);
@@ -107,12 +105,12 @@ void ProbeVolume_Cylinder::setGeometry(const Real3& x_base, const double radius,
 	h_eff_ = h_ + 2.0*alpha_c_;
 
 	// Shell 1
-	r_shell_1_ = r_eff_ + (width_shell_1_ + alpha_c_shells_);
-	h_shell_1_ = h_eff_ + 2.0*(width_shell_1_ + alpha_c_shells_);
+	r_shell_1_ = r_eff_ + width_shell_1_;
+	h_shell_1_ = h_eff_ + 2.0*width_shell_1_;
 
 	// Shell 2
-	r_shell_2_ = r_shell_1_ + (width_shell_2_ + alpha_c_shells_);
-	h_shell_2_ = h_shell_1_ + 2.0*(width_shell_2_ + alpha_c_shells_);
+	r_shell_2_ = r_shell_1_ + width_shell_2_;
+	h_shell_2_ = h_shell_1_ + 2.0*width_shell_2_;
 
 	// Precompute squared radii and half-heights
 	h_eff_h_     = 0.5*h_eff_;

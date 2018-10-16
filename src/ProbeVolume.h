@@ -75,10 +75,9 @@ class ProbeVolume
 
 	// Sets the size of the shells around the probe volume which are searched when 
 	// looking for atoms NEAR (but not in) the probe volume
-	virtual void setShellParameters(
+	virtual void setShellWidths(
 		const double width_shell_1, 
-		const double width_shell_2,
-		const double alpha_c_shells
+		const double width_shell_2
 	) = 0;
 
 	// Update probe volume parameters for each time step using state variables 
@@ -107,6 +106,8 @@ class ProbeVolume
 	// - Default: the entire SimulationBox
 	// - Must encompass the furthest extent of the shells (including coarse-
 	//   graining width)
+	// - TODO could there be problems when the ProbeVolume crosses PBCs?
+	//   (e.g. dynamic union of spheres)
 	virtual void setBoundingBox();
 
 	// Returns a string with complete, formatted information about the probe volume's
@@ -174,10 +175,8 @@ class ProbeVolume
 	int get_num_nearby_atoms_in_shell_2() const { return nearby_shell_2_atom_group_indices_.size(); }
 
 	// Access to parameters
-	double getIndicatorThreshold() const { return WEIGHT_THRESHOLD_; }
-	double get_sigma()             const { return sigma_; }
-	double get_alpha_c()           const { return alpha_c_; }
-	double get_alpha_c_shells()    const { return alpha_c_shells_; }
+	double get_sigma() const { return sigma_; }
+	double get_alpha_c() const { return alpha_c_; }
 	void   getShellWidths(double& width_shell_1, double& width_shell_2) const {
 		width_shell_1 = width_shell_1_;
 		width_shell_2 = width_shell_2_;
@@ -211,6 +210,7 @@ class ProbeVolume
 	// Vectors for local INDUS atoms
 	// - These are atoms in vtilde which are in the local DD cell
 	// - Derivatives of htilde_v are with respect to the corresponding atom position
+	//   TODO DYNAMIC: store derivatives wrt. probe volume atoms separately
 	std::vector<int>    local_atom_global_indices_;
 	std::vector<int>    local_atom_group_indices_;
 	std::vector<double> htilde_v_;
@@ -237,20 +237,15 @@ class ProbeVolume
 	double alpha_c_;  // Size of Gaussian buffer [nm]
 
 	// Size of shells around probe volume
+	// - This *includes* any coarse-graining that other objects may need
 	double width_shell_1_, width_shell_2_;
 
-	// Size of coarse-graining buffer added to shells
-	double alpha_c_shells_;
-
 	// Flags
+	bool is_dynamic_;
 	bool need_derivatives_;
 
 
 	//----- Constants -----//
-
-	// Threshold for determining whether a particle is inside the nominal probe
-	// volume (i.e. without coarse-graining)
-	static constexpr double WEIGHT_THRESHOLD_ = 0.5;
 
 	// Map x,y,z axes to indices (TODO make static constexpr?)
 	const int X_ = 0, Y_ = 1, Z_ = 2;

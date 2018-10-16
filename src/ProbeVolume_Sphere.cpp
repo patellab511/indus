@@ -48,12 +48,10 @@ void ProbeVolume_Sphere::setCoarseGrainingParameters(const double sigma, const d
 }
 
 
-void ProbeVolume_Sphere::setShellParameters(
-		const double width_shell_1, const double width_shell_2, const double alpha_c_shells) 
+void ProbeVolume_Sphere::setShellWidths(const double width_shell_1, const double width_shell_2)
 {
 	width_shell_1_  = width_shell_1;
 	width_shell_2_  = width_shell_2;
-	alpha_c_shells_ = alpha_c_shells;
 
 	// Update probe sphere
 	setGeometry(center_, r_);
@@ -75,8 +73,8 @@ void ProbeVolume_Sphere::setGeometry(const Real3& center, const double r)
 	r_eff_sq_ = r_eff_*r_eff_;
 
 	// Shells (with buffer)
-	r_shell_1_ = r_eff_     + width_shell_1_ + alpha_c_shells_;   r_shell_1_sq_ = r_shell_1_*r_shell_1_;
-  r_shell_2_ = r_shell_1_ + width_shell_2_ + alpha_c_shells_;   r_shell_2_sq_ = r_shell_2_*r_shell_2_;
+	r_shell_1_ = r_eff_     + width_shell_1_;   r_shell_1_sq_ = r_shell_1_*r_shell_1_;
+  r_shell_2_ = r_shell_1_ + width_shell_2_;   r_shell_2_sq_ = r_shell_2_*r_shell_2_;
 }
 
 
