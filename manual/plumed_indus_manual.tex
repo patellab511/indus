@@ -121,7 +121,7 @@
 % Prints the affiliations in a smaller, italicized font
 \renewcommand\Affilfont{\itshape\small}
 	
-\title{INDUS for PLUMED\\User Manual}
+\title{INDUS\\User Manual}
 \author{Sean M. Marks\\(\email{semarks@seas.upenn.edu})\\Amish J. Patel*\\(\email{amish.patel@seas.upenn.edu})}
 \affil{Patel Group\\University of Pennsylvania}
 	
@@ -217,7 +217,8 @@ The INDUS code can be compiled as a standalone program that can analyze XTC file
 Once you have installed \texttt{xdrfile}, go to the main directory of the INDUS code repository and change the following lines in the \texttt{Makefile}:
 
 \begin{lstlisting}[mathescape=false]
-# This variable indicates where you installed xdrfile (i.e. the directory containing the folders bin, include, and lib).
+# This variable indicates where you installed xdrfile (i.e. the directory containing 
+# the folders bin, include, and lib).
 XDR_DIR=$(HOME)/programs/xdrfile/1.1.4
 
 # If you aren't using a compiler that supports MPI, change the following lines
@@ -726,11 +727,11 @@ Implementing a new probe volume geometry is relatively simple. All geometries mu
 
 \begin{itemize}
 	\item Constructor
-	\item \texttt{isInProbeVolume}: given the position of a particle $i$, computes indicator functions $h_v(i)$ and $\tilde{h}_v(i)$, and derivatives $\partial \tilde{h}_v(i) \partial \mathbf{r}_i$.
+	\item \texttt{isInProbeVolume}: given the position of a particle $i$, this function returns a \texttt{bool} indicating whether or not the particle is in the nominal probe volume, \emph{i.e.} whether it contributes to $N_v$. It also computes indicator functions $h_v(i)$ and $\tilde{h}_v(i)$, the derivatives $\partial \tilde{h}_v(i) / \partial \mathbf{r}_i$, and whether the particle is in shell 1 or shell 2.
 	\item (some other helper methods ...)
 \end{itemize}
 
-Additionally, you must register your probe volume with the INDUS driver. Each probe volume has a unique name associated with it, which I refer to as its \emph{type}. This corresponds to the \texttt{type} field when declaring a \texttt{ProbeVolume} in \texttt{indus.input}. For an example of how to this, see the code at the top of \texttt{ProbeVolume\_Sphere.cpp}.
+Additionally, you must register your probe volume with the INDUS driver. Each probe volume has a unique name associated with it, which I refer to as its \emph{type}. This corresponds to the \texttt{type} field when declaring a \texttt{ProbeVolume} in \texttt{indus.input}. For an example of how to do this, see the code at the top of \texttt{ProbeVolume\_Sphere.cpp}.
 
 %%%
 
@@ -773,7 +774,7 @@ As mentioned previously, the shells are not currently used in the code but will 
 \subsection{Parallelization with MPI}
 
 % TODO
-How the code makes use of MPI to support limited parallelization within the PLUMED framework.
+INDUS makes use of MPI to support limited parallelization within the PLUMED framework.
 
 %%%
 
