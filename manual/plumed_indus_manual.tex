@@ -442,7 +442,7 @@ ProbeVolume = {
 
 \subsection{Biasing $\tilde{N}_v$ Using the INDUS Code's Potential}
 
-As an alternative to using PLUMED's \texttt{RESTRAINT} to set the form of the biasing potential, the INDUS code makes available its own biasing potential of the following general form:
+Recall that PLUMED's \texttt{RESTRAINT} action can be used to set the form of the biasing potential on $\tilde{N}_v$. As an alternative, the INDUS code makes available makes available its own biasing potential of the following general form:
 
 \begin{align}
 	\mathcal{U}_{\text{bias}}(x) 
@@ -450,7 +450,8 @@ As an alternative to using PLUMED's \texttt{RESTRAINT} to set the form of the bi
 	     + \mathcal{U}_{\text{left harmonic}}(x) + \mathcal{U}_{\text{right harmonic}}(x) \\
 	\label{eqn:generalbias}
 	&= \frac{1}{2} \kappa (x - x^*)^2 + (\phi x + c)
-	     + k_{\text{left}} \Theta(x_{\text{left}} - x) + k_{\text{right}} \Theta(x - x_{\text{right}})
+	   + \frac{1}{2} k_{\text{left}}  (x - x_{\text{left}})^2 \Theta(x_{\text{left}} - x)
+	   + \frac{1}{2} k_{\text{right}} (x - x_{\text{right}})^2 \Theta(x - x_{\text{right}})
 \end{align}
 
 \noindent where $\Theta(x)$ is the unit step function, which is zero for $x < 0$ and one for $x \ge 1$. Note that PLUMED supports similar functionality with a combination of the \texttt{RESTRAINT}, \texttt{LOWERWALLS}, and \texttt{UPPERWALLS} actions.
@@ -484,7 +485,7 @@ Bias = {
 
 %%%
 
-Then, in the PLUMED input file, $\mathcal{U}_{\text{bias}} = \mathcal{U}_{\text{bias}}(\tilde{N}_v)$ is passed to \texttt{RESTRAINT} as its \texttt{ARG}. This is done to ensure that the biasing forces are correctly passed to the PLUMED core.
+Then, in the PLUMED input file, \texttt{RESTRAINT} is called with \texttt{ARG}$ = \mathcal{U}_{\text{bias}}(\tilde{N}_v)$. This is done to ensure that the biasing forces are correctly passed to the PLUMED core.
 
 \begin{lstlisting}
 restraint: RESTRAINT ARG=indus.ubias SLOPE=1.0 AT=0.0 KAPPA=0.0
@@ -515,7 +516,7 @@ tf = <$t_f$>
 
 \subsection{Post-Processing a Trajectory with PLUMED's \texttt{driver}}
 
-Suppose that we have run an unbiased simulation and would now like to compute $N$ and $\tilde{N}_v$ for each frame of the trajectory, which is saved as an XTC file named \texttt{traj\_comp.xtc}. The probe volume is a cylinder with the center of its base at $\mathbf{r}_0 = (2.0, 2.0, 2.0)$ nm with radius $r = 1.0$ nm and height $h = 0.5$ nm. The cylinder is parallel to the $y$-axis and extends from $y_{\text{low}} = 2.0$ nm to $y_{\text{high}} = y_{\text{low}} + h = 2.5$ nm. The target atoms have indices 1, 4, 7, ... , 16498 (i.e. every 3 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm.
+Suppose that we have run simulation (biased or unbiased) and would now like to compute $N$ and $\tilde{N}_v$ for each frame of the trajectory, which is saved as an XTC file named \texttt{traj\_comp.xtc}. The probe volume is a cylinder with the center of its base at $\mathbf{r}_0 = (2.0, 2.0, 2.0)$ nm with radius $r = 1.0$ nm and height $h = 0.5$ nm. The cylinder is parallel to the $y$-axis and extends from $y_{\text{low}} = 2.0$ nm to $y_{\text{high}} = y_{\text{low}} + h = 2.5$ nm. The target atoms have indices 1, 4, 7, ... , 16498 (i.e. every 3 atoms from 1 to 16,500, indexed from 1). The coarse-graining parameters are $\sigma = 0.01$ nm and $\alpha_c = 2 \sigma = 0.02$ nm.
 
 The INDUS input file will be:
 \begin{lstlisting}
@@ -637,13 +638,9 @@ PrintForces = yes
 
 \section{Choice of Biasing Parameters for Umbrella Sampling}
 
-When performing umbrella sampling with $\tilde{N}_v$, we use the statistics of $N_v$ in the liquid basin in an unbiased simulation to guide our choice of biasing parameters. This is important for obtaining accurate results.
+When performing umbrella sampling with $\tilde{N}_v$ to obtain the free energy landscape, $F_v(\tilde{N}) = -\kB T \ln P_v(\tilde{N})$, the parameters in the biasing potential used must be chosen carefully to ensure accurate results. Appropriate heuristics for choosing the parameters will depend upon the system of interest, the form of the potential(s) used, and the features of its expected free energy landscape. Here, I will present heuristics that we have found useful for biasing $\tilde{N}_v$ in atomistic simulations of dense liquids.
 
-Let the average and variance of $N_v$ in the liquid basin be $\langle N_v \rangle_0$ and $\langle (\delta N_v)^2 \rangle_0$, respectively. Assuming that the liquid basin is approximately Gaussian, its curvature is
-
-\begin{equation}
-	\kappa_0 = \frac{k_{\text{B}} T}{\langle (\delta N_v)^2 \rangle_0}
-\end{equation}
+%%%
 
 Suppose that we want to bias $\tilde{N}_v$ using a harmonic potential,
 
@@ -651,7 +648,15 @@ Suppose that we want to bias $\tilde{N}_v$ using a harmonic potential,
 	\mathcal{U}_{\text{bias}}(\tilde{N}_v) = \frac{1}{2} \kappa (\tilde{N}_v - N^*)^2,
 \end{equation}
 
-\noindent where $\kappa$ and $N^*$ are constants (the biasing parameters). We choose $\kappa$ as a multiple of $\kappa_0$:
+\noindent where $\kappa$ and $N^*$ are constants (the biasing parameters). For INDUS in dense liquids such as water, we use the statistics of $N_v$ in the liquid basin in an unbiased simulation to guide our choice of biasing parameters. Let the average and variance of $N_v$ in the liquid basin be $\langle N_v \rangle_0$ and $\langle (\delta N_v)^2 \rangle_0$, respectively. Assuming that the liquid basin is approximately Gaussian, its curvature is
+
+\begin{equation}
+	\kappa_0 = \frac{k_{\text{B}} T}{\langle (\delta N_v)^2 \rangle_0}
+\end{equation}
+
+%%%
+
+For most systems of interest, we have found that $\kappa_0$ is a decent estimate of the maximum curvature of the underlying landscape, $F_v(\tilde{N})$. We therefore choose $\kappa$ as a multiple of $\kappa_0$:
 
 \begin{equation}
 	\kappa = \alpha \kappa_0
@@ -661,7 +666,7 @@ Suppose that we want to bias $\tilde{N}_v$ using a harmonic potential,
 
 %%%
 
-Accurate WHAM results require overlap between adjacent windows. For a desired overlap of $ \Delta F_{\text{overlap}}$, assuming that the biased ensembles for each $N^*$-value are Gaussian are leads an estimated spacing between $N^*$-values of
+Accurate WHAM results also require overlap of the biased free energy landscapes, $F_v^{(\kappa, N^*)}(\tilde{N})$, between adjacent windows. For a desired overlap of $ \Delta F_{\text{overlap}}$, assuming that the biased ensembles for each $N^*$-value are Gaussian leads an estimated spacing between $N^*$-values of
 
 \begin{equation}
 	\Delta N^* = 2 \sqrt{ \frac{(\beta \Delta F_{\text{overlap}}) \langle (\delta N_v)^2 \rangle_0}{1 + \alpha} }
@@ -722,11 +727,46 @@ Implementing a new probe volume geometry is relatively simple. All geometries mu
 \begin{itemize}
 	\item Constructor
 	\item \texttt{isInProbeVolume}: given the position of a particle $i$, computes indicator functions $h_v(i)$ and $\tilde{h}_v(i)$, and derivatives $\partial \tilde{h}_v(i) \partial \mathbf{r}_i$.
+	\item (some other helper methods ...)
 \end{itemize}
+
+Additionally, you must register your probe volume with the INDUS driver. Each probe volume has a unique name associated with it, which I refer to as its \emph{type}. This corresponds to the \texttt{type} field when declaring a \texttt{ProbeVolume} in \texttt{indus.input}. For an example of how to this, see the code at the top of \texttt{ProbeVolume\_Sphere.cpp}.
 
 %%%
 
 \subsubsection{What are the "shells"?}
+
+As you look through the source code, you will see many references to "shell 1" and "shell 2." In the context of the probe volume, these are regions of space that are within a certain distance of the edges of the coarse-grained probe volume. You can think of shell 1 as the first coordination shell around the probe volume, and shell 2 as the second coordination shell. This functionality is not currently used, but will be important for future additions that I would like to make.
+
+%%%
+
+To make things more concrete, let $w_1$ and $w_2$ be the widths of shell 1 and shell 2, respectively. Consider a spherical probe volume with radius $r$ centered at point $\mathbf{r}_0$ that has coarse-graining parameters $\sigma$ and $\alpha_c$. A particle $i$ is assigned to different regions depending on its distance from the center of the sphere, $r_{i,0}$. Then
+
+\begin{equation}
+	\text{particle $i$ is in}
+	\begin{cases}
+		\text{the "nominal" probe volume, $v$,}
+			& \text{for } r_{i,0} \leq r \\
+		\text{the "coarse-grained" probe volume, $\tilde{v}$,}
+			& \text{for } r_{i,0} \leq \tilde{r} \\
+		\text{shell 1,}
+			& \text{for } \tilde{r} < r_{i,0} \leq r_1 \\
+		\text{shell 2,}
+			& \text{for } r_1 < r_{i,0} \leq r_2
+	\end{cases}
+\end{equation}
+
+\noindent where
+
+\begin{align}
+	\tilde{r} &= r + \alpha_c                       & \text{(outer radius of $\tilde{v}$)} \\
+	r_1       &= \tilde{r} + w_1                    & \text{(outer radius of shell 1)} \\
+	r_2       &= r_1 + w_2 = \tilde{r} + w_1 + w_2  & \text{(outer radius of shell 2)}
+\end{align}
+
+%%%
+
+As mentioned previously, the shells are not currently used in the code but will be used in future versions to support new features. If you only care about doing standard INDUS, then you can just return \texttt{is\_in\_shell\_1 = false} and \texttt{is\_in\_shell\_2 = false} wherever applicable and the code will work just fine for INDUS.
 
 %%%
 
