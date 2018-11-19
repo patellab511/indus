@@ -6,8 +6,8 @@
 
 #pragma once
 
-#ifndef MD_ANALYSIS_H
-#define MD_ANALYSIS_H
+#ifndef XDR_FILE_TOOLS_H
+#define XDR_FILE_TOOLS_H
 
 // Check whether PLUMED is defined using one of its preprocessor variables
 #ifdef __PLUMED_HAS_MPI
