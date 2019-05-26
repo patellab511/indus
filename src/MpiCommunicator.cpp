@@ -464,7 +464,7 @@ void MpiCommunicator::allgatherv(
 		throw MpiNotInitializedException(); 
 	}
 #else
-	(void) data; (void) received_data; (void) received_counts;
+	(void) data; (void) block_offsets; (void) block_sizes; (void) received_data;
 	throw MpiNotEnabledException();
 #endif /* MPI_ENABLED */
 }
