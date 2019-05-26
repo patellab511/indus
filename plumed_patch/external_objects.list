@@ -13,9 +13,9 @@ ProbeVolume_Sphere
 SimpleVector
 SimulationBox 
 SimulationState
-SphericalHarmonics 
 StringTools 
 SwitchingFunction
 SwitchingFunction_r
 SwitchingFunction_x
 Topology
+XdrFileTools

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#ifndef MD_ANALYSIS_H
-#define MD_ANALYSIS_H
+#ifndef XDR_FILE_TOOLS_H
+#define XDR_FILE_TOOLS_H
 
 // Check whether PLUMED is defined using one of its preprocessor variables
 #ifndef INDUS_STANDALONE_MODE
@@ -142,13 +142,13 @@ class XdrFileTools
 
 	template<typename T>
 	T h_v_cylinder(
-		const T x[DIM], 
-		const T x_base[DIM], const T x_top[DIM], const T r, 
+		const T x[DIM_], 
+		const T x_base[DIM_], const T x_top[DIM_], const T r, 
 		const unsigned axis  // dimensional index for cylinder axis
 	) const
 	{
 		// Neglecting possiblity of needing PBCs
-		T radial_distance = dist_dminus1<T,DIM>( x, x_base, axis );
+		T radial_distance = dist_dminus1<T,DIM_>( x, x_base, axis );
 
 		T h_v;
 		if ( radial_distance <= r and
