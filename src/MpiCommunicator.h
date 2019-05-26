@@ -45,7 +45,7 @@
 #ifndef MPI_COMMUNICATOR_H
 #define MPI_COMMUNICATOR_H
 
-// Turn on MPI_ENABLED when compiling for PLUMED
+// Turn on MPI_ENABLED when compiling for PLUMED with MPI
 #if ( defined(__PLUMED_HAS_MPI) && ! defined(MPI_ENABLED) )
 #define MPI_ENABLED
 #endif

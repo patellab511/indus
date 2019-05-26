@@ -26,7 +26,7 @@
 #define CELL_GRID_H
 
 // Check whether PLUMED is defined using one of its preprocessor variables
-#ifdef __PLUMED_HAS_MPI
+#ifndef INDUS_STANDALONE_MODE
 #define CELL_GRID_PLUMED_MODE
 #endif
 

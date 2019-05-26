@@ -8,7 +8,7 @@
 #define COMMON_TYPES_H
 
 // Check for the presence of PLUMED using one of its preprocessor variables
-#ifdef __PLUMED_HAS_MPI
+#ifndef INDUS_STANDALONE_MODE
 #define COMMON_TYPES_PLUMED_MODE
 #endif
 

@@ -40,7 +40,7 @@ XDR_INCLUDE := $(XDR_DIR)/include/xdrfile
 
 # Compiler flags
 # - Misc: -Wno-comment -Wno-sign-compare -DPLUMED_MODE
-CXXFLAGS += -g -std=c++11 -DCPLUSPLUS -I$(XDR_INCLUDE) -Wall
+CXXFLAGS += -g -std=c++11 -DCPLUSPLUS -I$(XDR_INCLUDE) -Wall -DINDUS_STANDALONE_MODE
 # - Optimizations
 CXXFLAGS += -ffast-math -march=native -O3
 

@@ -10,7 +10,7 @@
 #define MD_ANALYSIS_H
 
 // Check whether PLUMED is defined using one of its preprocessor variables
-#ifdef __PLUMED_HAS_MPI
+#ifndef INDUS_STANDALONE_MODE
 #define XDR_FILE_TOOLS_PLUMED_MODE
 #endif
 
