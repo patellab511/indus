@@ -28,29 +28,26 @@
 
 # Executables
 *.exe
+#*.out
 *.app
 
-# bin directories
+# build/bin directories
 **/bin
+/build
 
-# Temporary directories
-**/tmp
-*/temp
-
-# misc. directories
-bck/
-misc/
-scrap/
-*.dSYM/
+# misc./temp directories
+bck
+misc
+scrap
+tmp
+temp
+stdout*.log
 
 # vim swp files
 *.swp
 
-# Mac junk
-.DS_Store
-
-# PLUMED backup files
-bck.*
+# GPTL log files
+gptl*.log*
 
 # LaTeX build files
 *.aux

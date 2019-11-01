@@ -6,7 +6,8 @@
 #
 # Probe_volume sphere
 #   center = {0.2, 0.3, 0.4} [nm]
-#   radius = 1 [nm]
+#   r_min = -1 [nm]
+#   r_max = 1 [nm]
 #   Coarse-graining
 #     sigma            = 0.01 [nm]
 #     alpha_c          = 0.02 [nm]
@@ -35,10 +36,10 @@
 #     Var_n_v     4.27273
 #     Stdev_n_v   2.06706
 #     kappa_0_n_v 0.234043 [kBT]
-#   Suggested biasing parameters (2*kappa_0 and 4kBT overlap rules of thumb)
+#   Suggested biasing parameters (2*kappa_0 and 4 kBT overlap rules of thumb)
 #     kappa_n_v      0.468085 [kBT]
 #     delta_n_v_star 4.77367
- 
+#
 # Time[ps]	N_v	Ntilde_v
 1000	132	132.573
 1001	137	137.505

@@ -1,0 +1,32 @@
+### INDUS input file ###
+
+# Files
+GroFile = ../../../../sample_traj/bulk_water_278K/initconf.gro
+TopFile = ../../../../sample_traj/bulk_water_278K/processed.top
+XtcFile = ../../../../sample_traj/bulk_water_278K/traj_water_278K_b1000_e1010.xtc
+
+# Water oxygens
+Target = [ atom_type OW ]
+
+# Probe volume
+ProbeVolume = {
+	type  = union_of_spherical_shells 
+	r_max = 0.7
+	# Centers of spherical subvolumes
+	sphere_centers           = [ fixed_positions_list file ]
+	reference_positions_file = sphere_centers.pos
+	# Coarse-graining
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# Biasing parameters
+Bias = {
+	# One-sided harmonics
+	order_parameter = ntilde
+	x_star = 0.0
+	kappa  = 1.0
+}
+
+# Output options
+PrintForces = yes
