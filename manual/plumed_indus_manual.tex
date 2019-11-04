@@ -394,7 +394,7 @@ The following subsections describe the syntax for the probe volume geometries cu
 \begin{lstlisting}
 ProbeVolume = {
   type   = sphere
-  radius = <$r$>
+  r_max  = <$r$>
   center = [ <$x$>  <$y$>  <$z$>  ]
   # Coarse-graining
   sigma   = <$\sigma$>
@@ -410,9 +410,9 @@ ProbeVolume = {
 ProbeVolume = {
 	type   = box
 	# Boundaries of box along each axis
-	x_range = [ <$x_{\text{low}}$> <$x_{\text{high}}$> ]
-	y_range = [ <$y_{\text{low}}$> <$y_{\text{high}}$> ]
-	z_range = [ <$z_{\text{low}}$> <$z_{\text{high}}$> ]
+	x_range = [ <$x_{\text{min}}$> <$x_{\text{max}}$> ]
+	y_range = [ <$y_{\text{min}}$> <$y_{\text{max}}$> ]
+	z_range = [ <$z_{\text{min}}$> <$z_{\text{max}}$> ]
 	# Coarse-graining
 	sigma   = <$\sigma$>
 	alpha_c = <$\alpha_c$>
@@ -437,6 +437,39 @@ ProbeVolume = {
 	sigma   = <$\sigma$>
 	alpha_c = <$\alpha_c$>
 }
+\end{lstlisting}
+
+%%%%%%
+
+\subsubsection{Union of Spheres}
+
+This probe volume consists of the union of spherical subvolumes centered on a set of positions $\left\{ \mathbf{r}_c \right\}$. For example, consider a probe volume, $v$, that consists of the union of two spheres, A and B, centered at positions $\mathbf{r}_A$ and $\mathbf{r}_B$, respectively. If particle $i$ is within \emph{either} sphere (A or B), then it is considered to be within $v$. This type of probe volume is particularly well-suited for studying the hydration shell of a protein, which is well-approximated by the union of spheres centered on the heavy atoms of the protein.
+
+A positive value of $r_\text{min}$ allows the union of spheres to become a union of spherical \emph{shells}. \textbf{Warning}: the union of spherical shells has not been extensively tested, compared to the standard union of spheres. You have been warned!
+
+\begin{lstlisting}
+ProbeVolume = {
+	type  = union_of_spheres
+	# Outer and inner radii of spheres
+	r_max = <$r_{\text{max}}$>
+	r_min = <$r_{\text{min}}$>    # default: -0.5 nm
+	# Sphere centers are defined by a list of positions, which are listed in a file
+	sphere_centers           = [ fixed_positions_list file ]
+	reference_positions_file = <sphere_centers.pos>
+	# Coarse-graining
+	sigma   = <$\sigma$>
+	alpha_c = <$\alpha_c$>
+}
+\end{lstlisting}
+
+The file \texttt{<sphere\_centers.pos>} is a list of coordinates where the sphere centers will be placed (one per line):
+
+\begin{lstlisting}
+# sphere_centers.pos
+<$x_1$> <$y_1$> <$z_1$>
+<$x_2$> <$y_2$> <$z_3$>
+<$x_3$> <$y_3$> <$z_3$>
+...
 \end{lstlisting}
 
 %%%%%%
