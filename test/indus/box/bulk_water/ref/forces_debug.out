@@ -1,4 +1,4 @@
-# Biasing forces on Indus atoms
+# Biasing forces on OrderParameters atoms
 #   Units: t(ps), box_matrix(nm), virial(kJ/mol), force(kJ/mol/nm)
 #   Each line starts with the global serial number of the affected atom
 N_total= 16500  N_biased= 4125

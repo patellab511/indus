@@ -6,7 +6,7 @@ Target = [ atom_index 1-16500:4 ]
 # Probe volume
 ProbeVolume = {
 	type   = sphere
-	radius = 1.0
+	r_max  = 1.0
 	center = [ 0.2 0.3 0.4  ]
 	# Coarse-graining
 	sigma   = 0.01

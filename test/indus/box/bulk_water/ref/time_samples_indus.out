@@ -5,13 +5,9 @@
 #   num_ranks = 1
 #
 # Probe_volume = box
-#   x_offset(lower-left corner) = { 1 1.8 3.5 }
-#   x_center = { 1.5 2.45 3.75 }
-#   box_matrix = {
-#     1 0 0
-#     0 1.3 0
-#     0 0 0.5
-#   }
+#   x_range = [ 1  2 ]
+#   y_range = [ 1.8  3.1 ]
+#   z_range = [ 3.5  4 ]
 #   Coarse-graining
 #     sigma            = 0.01 [nm]
 #     alpha_c          = 0.02 [nm]
@@ -40,10 +36,10 @@
 #     Var_n_v     4.47273
 #     Stdev_n_v   2.11488
 #     kappa_0_n_v 0.223577 [kBT]
-#   Suggested biasing parameters (2*kappa_0 and 4kBT overlap rules of thumb)
+#   Suggested biasing parameters (2*kappa_0 and 4 kBT overlap rules of thumb)
 #     kappa_n_v      0.447154 [kBT]
 #     delta_n_v_star 4.88411
- 
+#
 # Time[ps]	N_v	Ntilde_v
 1000	18	18.5118
 1001	21	21.5121

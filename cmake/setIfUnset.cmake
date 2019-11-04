@@ -1,0 +1,5 @@
+function(setIfUnset var value)
+	if (NOT ${var})
+		set(${var} ${value} PARENT_SCOPE)
+	endif()
+endfunction()

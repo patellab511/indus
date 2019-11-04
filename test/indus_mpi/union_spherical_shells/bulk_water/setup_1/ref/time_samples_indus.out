@@ -1,0 +1,56 @@
+# RESULTS: Time series of N_v and Ntilde_v
+# Indus Input
+#
+# MPI enabled
+#   num_ranks = 4
+#
+# Probe_volume union_of_spheres
+#   r_max = 0.7 [nm]
+#   r_min = -1 [nm]
+#   num_subvolumes = 3
+#   sphere_centers           = fixed_positions_list file
+#   reference_positions_file = sphere_centers.pos
+#   Coarse-graining
+#     sigma            = 0.01 [nm]
+#     alpha_c          = 0.02 [nm]
+#   Shells
+#     width_shell_1  = 0 [nm]
+#     width_shell_2  = 0 [nm]
+#
+# Target_Atoms_String = atom_type OW
+# Gro_File = ../../../../sample_traj/bulk_water_278K/initconf.gro
+# Xtc_File = ../../../../sample_traj/bulk_water_278K/traj_water_278K_b1000_e1010.xtc
+#   Production_phase
+#     Start = -1.79769e+308 [ps]
+#     Stop  = 1.79769e+308 [ps]
+#
+# Biasing_potentials
+#   Need_Derivatives = 1
+#   Bias_ntilde_v
+#    Bias_parameters
+#      Harmonic
+#        x_star = 0 [units of x]
+#        kappa  = 1 [kJ/mol]
+#
+# Output
+#   Number of particles
+#     Avg_n_v     98.6364
+#     Var_n_v     17.6545
+#     Stdev_n_v   4.20173
+#     kappa_0_n_v 0.0566426 [kBT]
+#   Suggested biasing parameters (2*kappa_0 and 4 kBT overlap rules of thumb)
+#     kappa_n_v      0.113285 [kBT]
+#     delta_n_v_star 9.70348
+#
+# Time[ps]	N_v	Ntilde_v
+1000	95	94.4659
+1001	94	94.946
+1002	97	97.102
+1003	92	92.8445
+1004	98	97.7537
+1005	98	99.0515
+1006	105	104.305
+1007	105	104.623
+1008	100	101
+1009	102	101.118
+1010	99	99.1048
