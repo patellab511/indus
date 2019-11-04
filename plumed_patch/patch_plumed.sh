@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eE
 
 #############
 ### Input ###
@@ -23,12 +23,13 @@ patch_dir=$( realpath $( dirname $0 ) )
 mda_dir=$( dirname $patch_dir )
 src_dir="${mda_dir}/src"
 
-# INDUS ++ objects needed for patch
-obj_list_file="${patch_dir}/external_objects.list"
+# Template module directory
+op_module="${patch_dir}/src/orderparameters"
+module_name=$( basename $op_module )
 
-# Interface object
-interface_obj="IndusInterface"
-interface_dir="${patch_dir}/IndusInterface"
+# A list of file names (without extensions) to ignore
+# - The vast majority are included, so only ignore particular ones
+exclude_files_list="${patch_dir}/exclude_files.list"
 
 
 ##################
@@ -36,43 +37,44 @@ interface_dir="${patch_dir}/IndusInterface"
 ##################
 
 # Colvar directory in plumed source
-colvar_dir="$plumed_root_dir/src/colvar"
-if [ ! -d $colvar_dir ]; then
-	echo "Couldnt' find plumed colvar directory \"$colvar_dir\" - exiting."
-	exit
+plumed_src="$plumed_root_dir/src"
+if [[ ! -d $plumed_src ]]; then
+	echo "Couldn't find plumed source directory, \"$plumed_src\" - exiting."
+	exit 1
 fi
 
-# Copy interface object
-if [ ! -d $interface_dir ]; then
-	echo "Couldnt' find interface directory \"$interface_dir\" - exiting."
-	exit
+# Copy module files
+plumed_module="${plumed_src}/${module_name}"
+if [[ ! -d $op_module ]]; then
+	echo "Couldn't find directory with module files, \"$op_module\" - exiting."
+	exit 1
 fi
-cp -v ${interface_dir}/${interface_obj}* $colvar_dir
-
-# Read list of Indus objects
-if [ ! -f $obj_list_file ]; then
-	echo "Couldnt' find object list \"$obj_list_file\" - exiting."
-	exit
+if [[ -d $plumed_module ]]; then
+	echo "Removing old module directory from PLUMED repo"
+	rm -rf $plumed_module
 fi
-#read -r -a objects <<< $( cat $obj_list_file )
-objects=($( cat "$obj_list_file" ))
+cp -rv $op_module $plumed_module
 
+# Read list of OrderParameters excluded_files
+if [[ ! -f $exclude_files_list ]]; then
+	echo "Couldn't find list of files to exclude, \"$exclude_files_list\" - exiting."
+	exit 1
+fi
+excluded_files=($( cat "$exclude_files_list" ))
 
-# Copy over Indus objects
-echo "Copying the following ${#objects[@]} objects in addition to $interface_obj:"
-for obj in ${objects[@]}; do
-	echo "  ${obj}"
-done
+# Get a list of all src files
+IFS=$'\n' src_files=($( find ${src_dir} -type f ))
 
-for obj in ${objects[@]}; do
-	# Loop over extensions for header and source
-	for ext in h cpp; do
-		# Some "objects" are header-only
-		file_to_copy="${src_dir}/${obj}.${ext}"
-		if [ -f $file_to_copy ]; then
-			cp -v $file_to_copy $colvar_dir
-		fi
-	done
+# Copy non-excluded files to module directory in PLUMED source
+for src_file in ${src_files[@]}; do
+	src_file_name=$( basename $src_file )  # trim off path
+	src_name=${src_file_name%.*}           # trim off file extension
+
+	if [[ ! " ${excluded_files[@]} " =~ " ${src_name} " ]]; then
+		cp -v $src_file $plumed_module
+	else
+		echo "Ignoring file $src_file_name"
+	fi
 done
 
 echo "Done"
