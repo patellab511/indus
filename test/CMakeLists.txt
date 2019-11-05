@@ -70,7 +70,6 @@ set(SERIAL_TESTS "")
 list(APPEND SERIAL_TESTS "indus/box/bulk_water")
 list(APPEND SERIAL_TESTS "indus/cylinder/bulk_water")
 list(APPEND SERIAL_TESTS "indus/sphere_near_box_edge/bulk_water")
-list(APPEND SERIAL_TESTS "indus/union_spherical_shells/bulk_water/setup_1")
 
 foreach(TEST_NAME IN LISTS SERIAL_TESTS)
 	set(TEST_DIR ${TEST_DIR_ROOT}/${TEST_NAME})
@@ -91,8 +90,6 @@ if(MPI_ENABLED AND OPENMP_ENABLED)
 	# TODO List from file/searching directories?
 	set(PARALLEL_TESTS "")
 	list(APPEND PARALLEL_TESTS "indus_mpi/sphere_near_box_edge/bulk_water")
-	list(APPEND PARALLEL_TESTS "indus_mpi/union_spherical_shells/bulk_water/setup_1")
-	#list(APPEND PARALLEL_TESTS "")
 
 	# TODO set WORKING_DIRECTORY?
 	foreach(TEST_NAME IN LISTS PARALLEL_TESTS)

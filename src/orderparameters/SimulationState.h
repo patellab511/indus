@@ -8,13 +8,6 @@
 //     - Get functions control access: an object that receives a const SimulationState&
 //       can see the current values of the state vars, but not modify them
 //
-//  - Ex. ProbeVolume that is a union of spheres centered on atoms must update each 
-//        time the atom positions change (usually each time step)
-//    - Rather than have the driver call the probe volume externally to update it,
-//      whenever the driver calls doIndusWithShells() (its "calculate()" routine),
-//      the ProbeVolume can update *itself*; it can request the new atom positions
-//      from its const ref to the driver's SimulationState
-//
 // FIXME Make a new object, AtomGroupRegistry, to manage AtomGroups?
 
 #pragma once
