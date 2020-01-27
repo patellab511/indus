@@ -1,5 +1,10 @@
+// MpiDatatype: Wrapper around MPI_Datatype
+
+#pragma once
 #ifndef MPI_DATATYPE_H
 #define MPI_DATATYPE_H
+
+#include "MpiEnvironment.h"
 
 // Standard headers
 #include <array>
@@ -16,19 +21,15 @@
 #include <unordered_map>
 #include <vector>
 
-// Library headers
-#ifdef MPI_ENABLED
-#include <mpi.h>
-#endif /* MPI_ENABLED */
-
 #include "MpiOp.h"
 #include "utils.h"
 
-// FIXME
+
 #ifndef MPI_ENABLED
 // Dummy classes for when MPI is not available
 class MPI_Datatype {};
 #endif /* MPI_ENABLED */
+
 
 class MpiDatatype 
 {

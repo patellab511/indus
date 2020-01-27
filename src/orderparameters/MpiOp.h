@@ -1,18 +1,16 @@
 // MpiOp - Wrapper around MPI_Op
 // - Handles allocation and deallocation
 
+#pragma once
 #ifndef MPI_OP_H
 #define MPI_OP_H
+
+#include "MpiEnvironment.h"
 
 #include <functional>
 #include <sstream>
 #include <type_traits>
 #include <unordered_map>
-
-// Library headers
-#ifdef MPI_ENABLED
-#include <mpi.h>
-#endif /* MPI_ENABLED */
 
 #include "utils.h"
 

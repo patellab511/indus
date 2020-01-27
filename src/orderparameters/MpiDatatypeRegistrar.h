@@ -1,5 +1,10 @@
+// MpiDatatypeRegistrar: helper class for registering MpiDatatypes
+
+#pragma once
 #ifndef MPI_DATATYPE_REGISTRAR_H
 #define MPI_DATATYPE_REGISTRAR_H
+
+#include "MpiEnvironment.h"
 
 // Registar for primitive types, and ones that support standard arithmetic operations
 //, typename std::enable_if< std::is_arithmetic<T>::value >::type* = nullptr  // FIXME

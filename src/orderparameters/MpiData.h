@@ -1,14 +1,14 @@
+// MpiData: Wraps together an MPI buffer and its MPI_Datatype
+
+#pragma once
 #ifndef MPI_DATA_H
 #define MPI_DATA_H
+
+#include "MpiEnvironment.h"
 
 #include <array>
 #include <complex>
 #include <vector>
-
-// Library headers
-#ifdef MPI_ENABLED
-#include <mpi.h>
-#endif /* MPI_ENABLED */
 
 #include "MpiDatatype.h"
 #include "utils.h"

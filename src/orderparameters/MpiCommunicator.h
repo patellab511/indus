@@ -50,14 +50,11 @@
 //    - Could make use of MPI's own custom type system with MPI_Type_contiguous
 //      - Reference:  https://tech.io/playgrounds/349/introduction-to-mpi/custom-types
 
+#pragma once
 #ifndef MPI_COMMUNICATOR_H
 #define MPI_COMMUNICATOR_H
 
-// Turn on MPI_ENABLED when compiling for PLUMED with MPI
-#if ( defined(__PLUMED_HAS_MPI) && ! defined(MPI_ENABLED) )
-#define MPI_ENABLED
-#endif
-
+#include "MpiEnvironment.h"
 
 // Standard headers
 #include <array>
@@ -74,11 +71,6 @@
 #include <unordered_map>
 #include <vector>
 
-// Library headers
-#ifdef MPI_ENABLED
-#include <mpi.h>
-#endif /* MPI_ENABLED */
-
 // Project headers 
 #include "MpiOp.h"
 #include "utils.h"
@@ -91,31 +83,7 @@ class MPI_Status {};
 class MPI_Request {};
 
 class MPI_Datatype;
-/*
-// TODO add static MpiInit and MpiFinalize to MpiCommunicator for convenience?
-// Dummy MPI_Init
-static void MPI_Init(int* argc, char** argv[]);
-// Dummy MPI_Finalize
-static void MPI_Finalize();
-*/
 #endif /* MPI_ENABLED */
-
-
-// Wrappers around MPI_Init and MPI_Finalize
-// - TODO:
-//   - Move to static MpiEnvironment class?
-//   - Add overloads for init() that take arguments?
-namespace MpiEnvironment {
-// TODO: 
-bool is_enabled();
-bool is_initialized();
-
-void initialize();
-void finalize();
-
-void init();
-} // end namespace MpiEnvironment
-
 
 // Forward declarations to prevent circular dependency
 class MpiData;
