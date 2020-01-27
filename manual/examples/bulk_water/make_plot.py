@@ -1,4 +1,4 @@
-#!/anaconda/bin/python3
+#!/usr/bin/env python3
 
 import numpy as np
 import matplotlib as mpl
@@ -32,7 +32,7 @@ fig, ax = plt.subplots()
 mask_f_finite = np.isfinite( f_wham )
 min_f = np.min( f_wham[mask_f_finite] )
 
-ax.plot( ntilde_v, f_wham, \
+ax.plot( ntilde_v, f_wham - np.nanmin(f_wham), \
          marker='o', markersize='1', linestyle='none', color='black' )
 
 # x/y-axis bounds

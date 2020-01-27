@@ -1,0 +1,15 @@
+# plumed.dat
+
+# Create an instance of the INDUS action, which computes N_v and Ntilde_v
+indus: INDUS INPUTFILE=indus.input
+
+# Put a harmonic bias on Ntilde_v
+restraint: RESTRAINT ARG=indus.ntilde AT=-5.0 KAPPA=0.98
+
+# Print N_v, Ntilde_v, and U_bias(Ntilde_v) every 500 steps
+PRINT ...
+	LABEL=print
+	ARG=indus.n,indus.ntilde,restraint.bias
+	STRIDE=500
+	FILE=plumed.out
+... PRINT

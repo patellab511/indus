@@ -826,39 +826,35 @@ void OrderParametersDriver::collectLocalOrderParameterDerivatives()
 
 	int num_ops = op_ptrs_.size();
 	for ( int n=0; n<num_ops; ++n ) {
-		if ( bias_ptrs_[n] != nullptr ) {
-			// The bias on this OP is active
+		// Indices of groups involved
+		const std::vector<int>& atom_group_indices = op_ptrs_[n]->get_atom_group_indices();
+		int num_atom_groups = atom_group_indices.size();
 
-			// Indices of groups involved
-			const std::vector<int>& atom_group_indices = op_ptrs_[n]->get_atom_group_indices();
-			int num_atom_groups = atom_group_indices.size();
+		// Access derivatives and indices
+		const std::vector<std::vector<Real3>>& local_group_derivatives = op_ptrs_[n]->get_local_derivatives();
+		const std::vector<std::vector<int>>&   local_group_indices = op_ptrs_[n]->get_local_group_indices();
 
-			// Access derivatives and indices
-			const std::vector<std::vector<Real3>>& local_group_derivatives = op_ptrs_[n]->get_local_derivatives();
-			const std::vector<std::vector<int>>&   local_group_indices = op_ptrs_[n]->get_local_group_indices();
+		// Put together derivatives across all AtomGroups involved
+		local_derivatives_ops_[n].resize(0);
+		local_op_indices_for_derivatives_[n].resize(0);
+		for ( int k=0; k<num_atom_groups; ++k ) {
+			int group_index = atom_group_indices[k];
 
-			// Put together derivatives across all AtomGroups involved
-			local_derivatives_ops_[n].resize(0);
-			local_op_indices_for_derivatives_[n].resize(0);
-			for ( int k=0; k<num_atom_groups; ++k ) {
-				int group_index = atom_group_indices[k];
+			local_derivatives_ops_[n].insert( 
+				local_derivatives_ops_[n].end(),
+				local_group_derivatives[k].begin(), local_group_derivatives[k].end() );
 
-				local_derivatives_ops_[n].insert( 
-					local_derivatives_ops_[n].end(),
-					local_group_derivatives[k].begin(), local_group_derivatives[k].end() );
-
-				// Map from group indices to OP indices
-				int old_size        = local_op_indices_for_derivatives_[n].size();
-				int num_new_indices = local_group_indices[k].size();
-				local_op_indices_for_derivatives_[n].resize( old_size + num_new_indices );
-				for ( int i=0; i<num_new_indices; ++i ) {
-					local_op_indices_for_derivatives_[n][old_size + i] = 
-						atom_group_to_op_indices_[group_index][ local_group_indices[k][i] ];
-				}
+			// Map from group indices to OP indices
+			int old_size        = local_op_indices_for_derivatives_[n].size();
+			int num_new_indices = local_group_indices[k].size();
+			local_op_indices_for_derivatives_[n].resize( old_size + num_new_indices );
+			for ( int i=0; i<num_new_indices; ++i ) {
+				local_op_indices_for_derivatives_[n][old_size + i] = 
+					atom_group_to_op_indices_[group_index][ local_group_indices[k][i] ];
 			}
-
-			sum_r_cross_op_derivatives_[n] = op_ptrs_[n]->get_sum_r_cross_derivatives();
 		}
+
+		sum_r_cross_op_derivatives_[n] = op_ptrs_[n]->get_sum_r_cross_derivatives();
 	}
 
 	collect_local_derivs_timer_.stop();

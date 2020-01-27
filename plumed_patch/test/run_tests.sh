@@ -39,9 +39,9 @@ main_test_dir=$( realpath $( dirname $0 ) )
 
 ### Bias qbar6v in a cylinder in bulk water ###
 
-test_subdir="bias_qbar6v/cylinder"
+test_subdir="bias_ntilde_v/sphere_RESTRAINT"
 test_dir="${main_test_dir}/${test_subdir}"
-echo "Testing biasing qbar6v in a cylinder in bulk water ($test_subdir) ..."
+echo "Running INDUS test: ($test_subdir) ..."
 cd $test_dir
 ./run_driver.sh $plumed_exe &> stdout.log
 test_1=$( diff -q plumed.out ref/plumed.out )

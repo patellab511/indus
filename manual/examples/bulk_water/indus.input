@@ -1,0 +1,15 @@
+# indus.input
+
+# Atoms targeted by INDUS
+Target = [ atom_index 1-11748:3 ]
+
+# Probe volume
+ProbeVolume = {
+	type   = sphere
+	center = [ 2.5 2.5 2.5 ]
+	radius = 0.6
+
+	# Coarse-graining
+	sigma   = 0.01
+	alpha_c = 0.02
+}

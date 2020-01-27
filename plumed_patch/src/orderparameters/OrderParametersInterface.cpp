@@ -84,7 +84,11 @@ OrderParametersInterface::OrderParametersInterface(const ActionOptions& ao):
 		driver_ptr_ = std::unique_ptr<OrderParametersDriver>( 
 			new OrderParametersDriver(input_file_, mpi_communicator_)
 		);
-		//driver_ptr_->set_share_all_derivatives(true);
+
+		// Ensure that all derivatives are available on all ranks in case
+		// Ntilde is passed directly to another Action like RESTRAINT
+		// - TODO: Automatic detection?
+		driver_ptr_->set_share_all_derivatives(true);
 	}
 	catch (const std::exception& e) {
 		std::cerr << "OrderParametersInterface: Unable to allocate memory for external "
