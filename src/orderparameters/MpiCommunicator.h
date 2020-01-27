@@ -167,6 +167,11 @@ class MpiCommunicator
 
 	int get_master_rank() const { return master_rank_; }
 
+	// Returns 'true' if this rank is the master rank
+	bool is_master_rank() {
+		return get_rank() == get_master_rank();
+	}
+
 	// Returns the number of ranks in this communicator
 	// - Returns 1 if MPI is not enabled
 	int get_size() const;
