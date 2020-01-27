@@ -56,12 +56,16 @@ void OrderParametersInterface::registerKeywords( Keywords& keys )
 
 
 // Constructor
-// TODO Copy communicator from PLUMED core
 OrderParametersInterface::OrderParametersInterface(const ActionOptions& ao):
 	// This line sets up various things in the plumed core which colvars rely on.
 	PLUMED_COLVAR_INIT(ao),
 	input_file_(""),
+#ifdef MPI_ENABLED
 	mpi_communicator_( comm.Get_comm() ),
+#else
+	// Don't try to copy dummy object PLMD::MPI_Comm - use the default constructor instead
+	mpi_communicator_(),
+#endif
 	my_rank_( mpi_communicator_.get_rank() ),
 	plumed_simulation_box_( getBox() ),
 	max_norm_deriv_tol_(-1.0)

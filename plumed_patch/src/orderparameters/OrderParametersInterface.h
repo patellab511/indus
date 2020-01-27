@@ -19,7 +19,7 @@
 #include "../core/ActionRegister.h"
 #include "../core/Colvar.h"
 
-// MDAnalysis++ headers
+// OrderParameters headers
 #include "CommonTypes.h"
 #include "GptlWrappers.h"
 #include "MpiCommunicator.h"
@@ -101,7 +101,7 @@ class OrderParametersInterface : public Colvar
 
 
  private:
-	// Input file with MDAnalysis++ parameters 
+	// Input file with OrderParameters parameters 
 	std::string input_file_;
 
 	// Underlying MPI_Comm is copied from from PLUMED's Communicator (this->comm)
@@ -118,7 +118,7 @@ class OrderParametersInterface : public Colvar
 	// Reference to PLUMED's simulation box object
 	const PLMD::Tensor& plumed_simulation_box_;
 
-	//----- Interface with MDAnalysis++ -----//
+	//----- Interface with OrderParameters -----//
 
 	// Pointers to external objects
 	std::unique_ptr<OrderParametersDriver> driver_ptr_;
