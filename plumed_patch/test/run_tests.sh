@@ -37,9 +37,9 @@ fi
 main_test_dir=$( realpath $( dirname $0 ) )
 
 
-### Bias qbar6v in a cylinder in bulk water ###
+### Bias in a cylinder in bulk water ###
 
-test_subdir="bias_ntilde_v/sphere_RESTRAINT"
+test_subdir="bias_ntilde_v/sphere/RESTRAINT"
 test_dir="${main_test_dir}/${test_subdir}"
 echo "Running INDUS test: ($test_subdir) ..."
 cd $test_dir

@@ -141,6 +141,7 @@ class OrderParametersInterface : public Colvar
 	int    global_index_max_norm_deriv_;
 	double max_norm_deriv_;
 	double max_norm_deriv_tol_; // tolerance
+	bool   check_max_norm_deriv_;
 
 	// Arrays based on no. atoms: indices, positions, and derivatives
 	PLMD::Vector total_force_;  // TODO total force on OP

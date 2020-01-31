@@ -437,7 +437,7 @@ class OrderParametersDriver
 	static void print_free_energy(std::ofstream& ofs, const T f_x, const I num_samples) {
 		if ( is_f_x_finite(f_x, num_samples) ) { ofs << f_x;   }
 		else                                   { ofs << "nan"; }    
-	};
+	}
 
 
 	//----- GPTL -----//

@@ -1,0 +1,14 @@
+### INDUS input file ###
+
+# Water oxygens
+Target = [ atom_index 1-16500:4 ]
+
+# Probe volume
+ProbeVolume = {
+	type   = sphere
+	r_max  = 1.0
+	center = [ 0.2 0.3 0.4  ]
+	# Coarse-graining
+	sigma   = 0.01
+	alpha_c = 0.02
+}

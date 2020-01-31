@@ -68,7 +68,8 @@ OrderParametersInterface::OrderParametersInterface(const ActionOptions& ao):
 #endif
 	my_rank_( mpi_communicator_.get_rank() ),
 	plumed_simulation_box_( getBox() ),
-	max_norm_deriv_tol_(-1.0)
+	max_norm_deriv_tol_(-1.0),
+	check_max_norm_deriv_(false)
 {
 	//----- Parse input -----//
 
@@ -80,6 +81,7 @@ OrderParametersInterface::OrderParametersInterface(const ActionOptions& ao):
 
 	// Check that everything on the input line has been read properly
   checkRead();
+
 
 	//----- Initialize external objects necessary for calculation -----//
 
@@ -101,25 +103,13 @@ OrderParametersInterface::OrderParametersInterface(const ActionOptions& ao):
 		throw;
 	}
 
-	//----- Atoms Involved -----//
-
-	// Get global indices of targets parsed by OrderParametersDriver
-	const std::vector<int>& op_atom_global_indices
-			= driver_ptr_->get_op_atom_global_indices();
+	// Global indices of targets are parsed by OrderParametersDriver
+	// - Convert to PLUMED format
+	const std::vector<int>& op_atom_global_indices = driver_ptr_->get_op_atom_global_indices();
 	int num_op_atoms = op_atom_global_indices.size();
-
-	try {
-		// Pass global indices to PLUMED core so it knows which atoms this action needs
-		op_atom_numbers_.resize(num_op_atoms);
-		for ( int i=0; i<num_op_atoms; ++i ) {
-			op_atom_numbers_[i].setIndex( op_atom_global_indices[i] );
-		}
-		requestAtoms(op_atom_numbers_);
-	}
-	catch (const std::exception& e) {
-		std::cerr << "OrderParametersInterface: Unable to set up target atom arrays.\n"
-		          << "  .what(): " << e.what() << "\n";
-		throw;
+	op_atom_numbers_.resize(num_op_atoms);
+	for ( int i=0; i<num_op_atoms; ++i ) {
+		op_atom_numbers_[i].setIndex( op_atom_global_indices[i] );
 	}
 
 
@@ -143,10 +133,8 @@ OrderParametersInterface::OrderParametersInterface(const ActionOptions& ao):
 	componentIsNotPeriodic("ubias");
 
 	addComponent("n");                componentIsNotPeriodic("n");
-	addComponent("ubiasq");           componentIsNotPeriodic("ubiasq");
 	addComponent("ubiasntilde");      componentIsNotPeriodic("ubiasntilde");
 	addComponent("maxnormderiv");     componentIsNotPeriodic("maxnormderiv");
-	addComponent("numnnadjustments"); componentIsNotPeriodic("numnnadjustments");
 
 	// Pressure due to the bias
 	for ( int a=0; a<DIM_; ++a ) {
@@ -169,13 +157,14 @@ OrderParametersInterface::OrderParametersInterface(const ActionOptions& ao):
   }
   log.printf("\n");
 
-	if ( max_norm_deriv_tol_ >= 0.0 ) {
+	check_max_norm_deriv_ = ( max_norm_deriv_tol_ >= 0.0 );
+	if ( check_max_norm_deriv_ ) {
 		log << "  with largest expected norm of a derivative set at tol="
 		    << max_norm_deriv_tol_ << "\n";
 		log << "    PLUMED will now check for abnormally large derivatives in this action.\n";
 	}
 
-	// Parallelization support (TODO: print more detailed info/move to MDA function)
+	// Parallelization support (TODO: print more detailed info/move to OPDriver function)
 	bool is_mpi_enabled        = MpiCommunicator::is_mpi_enabled();
 	bool is_openmp_enabled     = OpenMP::is_enabled();
 	bool share_all_derivatives = driver_ptr_->share_all_derivatives();
@@ -188,6 +177,20 @@ OrderParametersInterface::OrderParametersInterface(const ActionOptions& ao):
 	log << "  BEGIN STEINHARDT INPUT SUMMARY\n"
 	    << driver_ptr_->getInputSummary()
 	    << "  END STEINHARDT INPUT SUMMARY\n";
+
+
+	//----- Request Atoms -----//
+
+	// This step must be done after all components have been added with/without derivatives.
+	// Otherwise, the necessary arrays for derivatives will not be allocated.
+	try {
+		requestAtoms(op_atom_numbers_);
+	}
+	catch (const std::exception& e) {
+		std::cerr << "OrderParametersInterface: Unable to request atoms.\n"
+		          << "  .what(): " << e.what() << "\n";
+		throw;
+	}
 }
 
 
@@ -259,7 +262,7 @@ void OrderParametersInterface::calculate()
 	Value* ntilde_ptr = getPntrToComponent("ntilde");
 
 	ntilde_ptr->set(ntilde_v_);
-	if ( driver_ptr_->share_all_derivatives() ) {
+	if ( ntilde_ptr->hasDerivatives() ) {
 		for ( int i=0; i<num_op_atoms; i++ ) {
 			// PLUMED stores derivatives in a linear array
 			int atom_offset = DIM_*i;
@@ -269,6 +272,7 @@ void OrderParametersInterface::calculate()
 		}
 		setBoxDerivatives(ntilde_ptr, box_derivatives_ntilde_v_);
 	}
+
 
 	//------------------------------//
 	//----- Output for "ubias" -----//
@@ -291,14 +295,16 @@ void OrderParametersInterface::calculate()
 	// Pass output to PLUMED core
 	Value* ubias_ptr = getPntrToComponent("ubias");
 	ubias_ptr->set(u_bias_);
-  for ( int i=0; i<num_op_atoms; i++ ) {
-		// PLUMED stores derivatives in a linear array
-		int atom_offset = DIM_*i;
-		for ( int d=0; d<DIM_; ++d ) {
-			ubias_ptr->addDerivative(atom_offset + d, derivatives_u_bias_total[i][d]);
+	if ( ubias_ptr->hasDerivatives() ) {
+		for ( int i=0; i<num_op_atoms; i++ ) {
+			// PLUMED stores derivatives in a linear array
+			int atom_offset = DIM_*i;
+			for ( int d=0; d<DIM_; ++d ) {
+				ubias_ptr->addDerivative(atom_offset + d, derivatives_u_bias_total[i][d]);
+			}
 		}
+		setBoxDerivatives(ubias_ptr, box_derivatives_u_bias_);
 	}
-	setBoxDerivatives(ubias_ptr, box_derivatives_u_bias_);
 
 	// Convert pressure from kJ/mol/nm^3 to bar
 	constexpr double n_Av      = 6.022e23;  // Avogadro's number (1/mol)
@@ -320,7 +326,7 @@ void OrderParametersInterface::calculate()
 	//----- Checking for large derivatives -----//
 	//------------------------------------------//
 
-	if ( max_norm_deriv_tol_ >= 0.0 and driver_ptr_->share_all_derivatives() ) {
+	if ( check_max_norm_deriv_ and ntilde_ptr->hasDerivatives() ) {
 		this->calculateMaxNormDeriv( derivatives_ntilde_v,
 		                             max_norm_deriv_, global_index_max_norm_deriv_ );
 	}

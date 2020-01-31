@@ -1,0 +1,12 @@
+# PLUMED input file
+
+indus: INDUS INPUTFILE=indus.input TOL=1000.0
+
+#restraint: RESTRAINT ARG=indus.ntilde AT=0.0 KAPPA=1.0
+
+PRINT ...
+	LABEL=print
+	ARG=indus.n,indus.ntilde
+	STRIDE=1
+	FILE=plumed.out
+... PRINT
