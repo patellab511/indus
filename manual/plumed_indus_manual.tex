@@ -214,24 +214,53 @@ Once you have installed PLUMED+INDUS, follow the instructions \href{\plumeddoc/_
 
 The INDUS code can be compiled as a standalone program that can analyze XTC files. Before proceeding, you will need to install the \texttt{xdrfile} library written by the GROMACS development team (see \href{http://www.gromacs.org/Developer_Zone/Programming_Guide/XTC_Library}{here}). Make note of where you install it: you will need this information later.
 
-Once you have installed \texttt{xdrfile}, go to the main directory of the INDUS code repository and change the following lines in the \texttt{Makefile}:
+To install INDUS as a standalone program, you will need to use CMake \href{https://cmake.org/download/}{(download)}. The minimum version currently required is 3.15. Note that while it should be possible to use CMake to compile INDUS on Windows, I have only tested the procedure on MacOS and Ubuntu.
+
+Below is a Bash script that demonstrates the process of configuring and installing standalone INDUS on a generic Unix-based system.
 
 \begin{lstlisting}[mathescape=false]
+#!/bin/bash -eE
+
 # This variable indicates where you installed xdrfile (i.e. the directory containing 
 # the folders bin, include, and lib).
-XDR_DIR=$(HOME)/programs/xdrfile/1.1.4
+XDR_DIR=<your-xdrfile-here>
+
+# Put here the location where the driver should be installed
+install_dir="${HOME}/programs/indus"
 
 # If you aren't using a compiler that supports MPI, change the following lines
-# - Mac OSX: CC=clang, CXX=clang++
-# - Linux: CC=gcc, CXX=g++
+# - MacOS: CC=clang, CXX=clang++
+# - Linux: CC=gcc,   CXX=g++
 CC=mpicc
 CXX=mpic++
 
-# Change this variable to 0 (false) if you aren't using MPI compilers
-is_mpi_enabled=1
+# Create a build directory
+mkdir -p build
+cd build
+
+# Configure INDUS. If you don't want to (or can't) compile with MPI or OpenMP support,
+# simply change the corresponding options below from ON to OFF.
+cmake .. \
+	-DCMAKE_INSTALL_PREFIX="$install_dir" \
+	-DCMAKE_BUILD_TYPE="RelWithDebInfo"   \
+	-DXDRFILE_DIR="$XDRFILE_DIR"          \
+	-DMPI_ENABLED=ON      \
+	-DOPENMP_ENABLED=ON   \
+	-DGPTL_ENABLED=OFF
+
+# Compile
+make -j
+
+# Run tests
+make test
+
+# Install
+make install
 \end{lstlisting}
 
+
 %%%%%%
+
 
 \section{Using the Code}
 
