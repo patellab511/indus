@@ -1,5 +1,9 @@
 #include "OrderParameter.h"
 
+constexpr int OrderParameter::DIM_;
+constexpr int OrderParameter::X_DIM;
+constexpr int OrderParameter::Y_DIM;
+constexpr int OrderParameter::Z_DIM;
 
 OrderParameter::OrderParameter(InputPack& input_pack):
 	// Access to state variables

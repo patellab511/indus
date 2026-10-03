@@ -29,8 +29,6 @@ setIfUnset(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 ### Important variables and options ###
 #######################################
 
-set(XDRFILE_DIR "${HOME}/programs/xdrfile" CACHE STRING "Location of xdrfile installation")
-
 # GPTL (for benchmarking)
 option(GPTL_ENABLED "Enable GPTL" ON)
 set(GPTL_DIR "${HOME}/programs/gptl" CACHE STRING "Location of GPTL installation")
@@ -49,21 +47,6 @@ set(INDUS_DRIVER "${PROJECT_NAME}" CACHE STRING "Name of the executable")
 #################
 
 # TODO: check here that libraries will work?
-
-### xdrfile ###
-
-message("-- xdrfile location: ${XDRFILE_DIR}")
-
-# Look for static library
-set(LIB_XDRFILE "xdrfile")
-find_library(XDRFILE_LIB_STATIC
-             NAMES lib${LIB_XDRFILE}.a ${LIB_XDRFILE}.a
-             HINTS "${XDRFILE_DIR}/lib"
-             )
-if(XDRFILE_LIB_STATIC)
-	message("-- Found static library for ${LIB_XDRFILE}: ${XDRFILE_LIB_STATIC}")
-endif()
-
 
 ### GPTL ###
 

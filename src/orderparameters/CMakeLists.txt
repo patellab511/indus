@@ -27,20 +27,18 @@ function(targetLinkLibraryPreferStatic TARGET SCOPE LIBNAME)
 endfunction()
 
 
-# xdrfile
-target_include_directories(${LIB_INDUS} PUBLIC "${XDRFILE_DIR}/include")
-# - Prefer static linkage
-if(LIB_XDRFILE_STATIC)
-	target_link_libraries(${LIB_INDUS} PUBLIC ${LIB_XDRFILE_STATIC})
-else()
-	# Fall back on dynamic linkage of XDRFILE
-	target_link_libraries(${LIB_INDUS} PUBLIC ${LIB_XDRFILE})
-	target_link_directories(${LIB_INDUS} PUBLIC "${XDRFILE_DIR}/lib")
-endif()
+# Project headers and vendored xdrfile
+target_include_directories(${LIB_INDUS} PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(${LIB_INDUS} PUBLIC indus_xdrfile)
 
 # OpenMP
 if(OPENMP_ENABLED)
 	target_link_libraries(${LIB_INDUS} PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+# MPI
+if(MPI_ENABLED)
+	target_link_libraries(${LIB_INDUS} PUBLIC MPI::MPI_CXX)
 endif()
 
 # GPTL

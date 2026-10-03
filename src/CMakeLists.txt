@@ -1,6 +1,7 @@
 ### LIB_INDUS ###
 
 # This directory contains the core src files
+add_subdirectory(xdrfile)
 add_subdirectory(orderparameters)
 
 
