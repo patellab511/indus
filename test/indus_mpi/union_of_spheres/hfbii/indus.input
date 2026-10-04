@@ -1,0 +1,29 @@
+### INDUS input file: static union of spheres over the exposed heavy atoms of HFBII ###
+
+# Files
+GroFile = ../../../sample_traj/hfbii/hfbii_spce.gro
+XtcFile = ../../../sample_traj/hfbii/hfbii_npt_10frames.xtc
+
+# Water oxygens
+Target = [ atom_index 983-18449:3 ]
+
+# Probe volume: one 0.6 nm sphere on every solvent-exposed protein heavy atom
+ProbeVolume = {
+	type  = union_of_spheres
+	r_max = 0.6
+	reference_positions_file = ../../../sample_traj/hfbii/exposed_heavy_atoms.pos
+	# Coarse-graining
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# Biasing parameters
+Bias = {
+	# Harmonic potential
+	order_parameter = ntilde
+	x_star = 0.0
+	kappa  = 1.0
+}
+
+# Output options
+PrintForces = yes

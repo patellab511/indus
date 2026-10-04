@@ -1,0 +1,11 @@
+Hydrophobin HFBII (PDB 2B97, chain A, residues 1-70) in SPC/E water.
+AMBER99SB-ILDN, 5.8 nm cubic box, 5823 waters, 18449 atoms, 300 K / 1 bar.
+Protein heavy atoms position-restrained (1000 kJ/mol/nm^2).
+
+hfbii_spce.gro   : final NPT-equilibrated structure (no velocities)
+hfbii_npt_10frames.xtc : 10 frames at 50 ps spacing from the NPT equilibration (t = 550..1000 ps)
+exposed_heavy_atoms.pos: positions (nm) of the 245 protein heavy atoms with nonzero SASA
+                         (gmx sasa, probe 0.14 nm, Protein-H group) in hfbii_spce.gro;
+                         used as union_of_spheres centers in test/indus*/union_of_spheres/hfbii
+
+Water oxygens are atoms 983-18449:3 (1-based serials).

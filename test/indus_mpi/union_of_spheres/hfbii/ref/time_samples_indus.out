@@ -1,0 +1,66 @@
+# RESULTS: Time series of N_v and Ntilde_v
+# Indus Input
+#
+# MPI enabled
+#   num_ranks = 4
+#
+# Probe_volume union_of_spheres
+#   reference_positions_file = ../../../sample_traj/hfbii/exposed_heavy_atoms.pos
+#   num_spheres = 245
+#   r_min = -1 [nm]
+#   r_max = 0.6 [nm]
+#   centers [nm]
+#     1: {2.435, 3.995, 3.568}
+#     2: {2.384, 3.86, 3.548}
+#     3: {2.242, 3.866, 3.492}
+#     4: {2.555, 3.85, 3.395}
+#     5: {2.492, 3.649, 3.487}
+#     6: {2.69, 3.5, 3.498}
+#     7: {2.791, 3.434, 3.41}
+#     8: {2.762, 3.621, 3.565}
+#     9: {2.496, 3.432, 3.218}
+#     10: {2.193, 3.279, 3.458}
+#     ... (235 more)
+#   Coarse-graining
+#     sigma            = 0.01 [nm]
+#     alpha_c          = 0.02 [nm]
+#   Shells
+#     width_shell_1  = 0 [nm]
+#     width_shell_2  = 0 [nm]
+#
+# Target_Atoms_String = atom_index 983-18449:3
+# Gro_File = ../../../sample_traj/hfbii/hfbii_spce.gro
+# Xtc_File = ../../../sample_traj/hfbii/hfbii_npt_10frames.xtc
+#   Production_phase
+#     Start = -1.79769e+308 [ps]
+#     Stop  = 1.79769e+308 [ps]
+#
+# Biasing_potentials
+#   Need_Derivatives = 1
+#   Bias_ntilde_v
+#    Bias_parameters
+#      Harmonic
+#        x_star = 0 [units of x]
+#        kappa  = 1 [kJ/mol]
+#
+# Output
+#   Number of particles
+#     Avg_n_v     540.7
+#     Var_n_v     82.4556
+#     Stdev_n_v   9.0805
+#     kappa_0_n_v 0.0121277 [kBT]
+#   Suggested biasing parameters (2*kappa_0 and 4 kBT overlap rules of thumb)
+#     kappa_n_v      0.0242555 [kBT]
+#     delta_n_v_star 20.9705
+#
+# Time[ps]	N_v	Ntilde_v
+550	523	525.763
+600	544	543.95
+650	555	557.996
+700	539	541.509
+750	545	546.181
+800	543	540.911
+850	534	535.169
+900	551	553.521
+950	536	537.857
+1000	537	539.06
