@@ -21,14 +21,14 @@ ProbeVolume = {
 }
 ```
 
-![HFBII surface colored by the number of water oxygens within 0.6 nm of each atom, at four points while Ntilde in a union of 245 spheres is driven from 542 to 0](doc/images/hfbii_union_of_spheres_hydration.png)
+![HFBII surface colored by the number of water oxygens within 0.6 nm of each atom, at Ntilde = 542, 282, 151 and 38 as a union-of-spheres restraint drives it to 0](doc/images/hfbii_union_of_spheres_hydration.png)
 
 *Hydrophobin HFBII (PDB 2B97) in SPC/E water, protein heavy atoms restrained, surface colored
 by the number of water oxygens within 0.6 nm of each atom. The probe volume is the union of
 0.6 nm spheres on the 245 solvent-exposed heavy atoms. A harmonic restraint on Ntilde (PLUMED
 `MOVINGRESTRAINT`, kappa = 0.5 kJ/mol) was ramped from 542 to 0 over 2 ns and held at 0 for
-1 ns; the panels are the unbiased state, 1 ns, 1.5 ns, and the end of the hold, where 38
-waters remain, mostly near polar and charged residues. GROMACS 2024.3 + PLUMED 2.9.4 built
+1 ns; the panels show Ntilde = 542 (unbiased), 282, 151 and 38 (end of the hold). The
+remaining water sits mostly near polar and charged residues. GROMACS 2024.3 + PLUMED 2.9.4 built
 with the installer below; rendered with open-source PyMOL from
 `doc/images/hfbii_union_of_spheres_hydration.pml`.*
 
