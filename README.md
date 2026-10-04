@@ -21,14 +21,15 @@ ProbeVolume = {
 }
 ```
 
-![Water driven out of the hydration shell of hydrophobin HFBII with a harmonic bias on Ntilde in a union of 245 spheres](doc/images/hfbii_union_of_spheres_dewetting.png)
+![HFBII surface colored by the number of water oxygens within 0.6 nm of each atom, before and after biasing Ntilde in a union of 245 spheres to zero](doc/images/hfbii_union_of_spheres_hydration.png)
 
-*Hydrophobin HFBII (PDB 2B97) in SPC/E water, protein heavy atoms restrained. Left: unbiased,
-542 waters inside the union of 0.6 nm spheres on the 245 solvent-exposed heavy atoms. Right:
-after a harmonic restraint on Ntilde (PLUMED `MOVINGRESTRAINT`, kappa = 0.5 kJ/mol) was ramped
-from 542 to 0 over 2 ns and held at 0 for 1 ns, 38 waters remain. GROMACS 2024.3 + PLUMED 2.9.4
-built with the installer below; rendered with open-source PyMOL from
-`doc/images/hfbii_union_of_spheres_dewetting.pml`.*
+*Hydrophobin HFBII (PDB 2B97) in SPC/E water, protein heavy atoms restrained, surface colored
+by the number of water oxygens within 0.6 nm of each atom. Left: unbiased, 542 waters inside
+the union of 0.6 nm spheres on the 245 solvent-exposed heavy atoms. Right: after a harmonic
+restraint on Ntilde (PLUMED `MOVINGRESTRAINT`, kappa = 0.5 kJ/mol) was ramped from 542 to 0
+over 2 ns and held at 0 for 1 ns, 38 waters remain, mostly near the polar and charged
+residues. GROMACS 2024.3 + PLUMED 2.9.4 built with the installer below; rendered with
+open-source PyMOL from `doc/images/hfbii_union_of_spheres_hydration.pml`.*
 
 ## Building the whole stack
 
