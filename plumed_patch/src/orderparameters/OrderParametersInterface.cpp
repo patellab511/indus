@@ -118,15 +118,14 @@ OrderParametersInterface::OrderParametersInterface(const ActionOptions& ao):
 	// Tell the plumed core that we require space to store the value of CV components, that they're
 	// not periodic, and that the CV will act on a particular list of atoms.
 	// - These functions are inherited from PLMD::ActionWithValue <-- PLMD::Colvar
+	// (An unused legacy component "q" used to be declared here. PLUMED >= 2.9 rejects
+	//  components that are not registered in registerKeywords, so it was removed.)
 	if ( driver_ptr_->share_all_derivatives() ) {
-		addComponentWithDerivatives("q");
 		addComponentWithDerivatives("ntilde");
 	}
 	else {
-		addComponent("q");
 		addComponent("ntilde");
 	}
-	componentIsNotPeriodic("q");
 	componentIsNotPeriodic("ntilde");
 
 	addComponentWithDerivatives("ubias");

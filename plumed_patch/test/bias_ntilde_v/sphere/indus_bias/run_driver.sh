@@ -2,7 +2,7 @@
 
 plumed_exe=$1
 plumed_input="plumed.dat"
-xtc_file="../../../../test/sample_traj/bulk_water_278K/traj_water_278K_b1000_e1010.xtc"
+xtc_file="../../../../../test/sample_traj/bulk_water_278K/traj_water_278K_b1000_e1010.xtc"
 
 if [[ $# -lt 1 ]]; then
 	echo "Missing PLUMED driver"
