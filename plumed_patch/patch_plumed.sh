@@ -18,10 +18,12 @@ plumed_root_dir=$1
 ### Files and directories ###
 #############################
 
-# Location of MDAnalysis++ source code
+# Location of the INDUS source code
+# - Only src/orderparameters goes into PLUMED. The driver's main (src/driver) and the
+#   vendored xdrfile library (src/xdrfile) are for the standalone program; PLUMED has its own.
 patch_dir=$( realpath $( dirname $0 ) )
 mda_dir=$( dirname $patch_dir )
-src_dir="${mda_dir}/src"
+src_dir="${mda_dir}/src/orderparameters"
 
 # Template module directory
 op_module="${patch_dir}/src/orderparameters"

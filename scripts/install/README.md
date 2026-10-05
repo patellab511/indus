@@ -62,10 +62,11 @@ TEST_RANKS=4 TEST_THREADS=2 \
     scripts/install/install_indus_stack.sh --root $HOME/software/indus-stack --name gpu-node
 ```
 
-Build on a node of the same architecture you will run on, or set `GMX_SIMD` for the target.
-If the site forbids `mpirun` on login nodes, run with `--from fetch --only build-indus` style
-phases on the login node and the `test` phase inside a job. Load the same modules before
-`source <stack>/env.sh`.
+Compute nodes usually have no internet access, so run the `fetch` phase on the login node
+first (`--only fetch`, same `--root`/`--name`), then submit the rest as a job; completed
+phases are skipped. Build on a node of the same architecture you will run on, or set
+`GMX_SIMD` for the target. Load the same modules before `source <stack>/env.sh`. A job script
+that does this is in `scripts/install/examples/slurm_build_stack.sbatch`.
 
 **Other PLUMED or GROMACS versions**
 
@@ -143,5 +144,10 @@ Results go to `<stack>/test-results.txt` and the manifest.
 - **PLUMED aborts at startup with "component ... has not been added to the manual"**: an
   INDUS source tree older than this repository's `plumed_patch`; rerun `patch-plumed` from
   the current checkout.
+- **`download failed` / `Could not resolve host`**: no internet on this node. Run
+  `--only fetch` on a login node, or copy the two tarballs into `<stack>/src`, then rerun.
+- **`QOSMaxWallDurationPerJobLimit` or similar when submitting**: the partition caps the job
+  time; the whole build takes 20 to 40 minutes on 16 to 32 cores, and `--from <phase>` resumes
+  if a job is cut off.
 - **A phase failed**: read `<stack>/logs/<phase>.log`, fix the cause, rerun with
   `--from <phase>`.

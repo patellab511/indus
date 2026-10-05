@@ -182,7 +182,10 @@ sha256_of() {
 fetch_file() {   # fetch_file DEST URL [SHA256]
 	local dest="$1" url="$2" sum="${3:-}"
 	if [[ ! -f "$dest" ]]; then
-		if command -v curl >/dev/null 2>&1; then curl -L --fail -o "$dest" "$url"; else wget -O "$dest" "$url"; fi
+		if command -v curl >/dev/null 2>&1; then curl -L --fail -o "$dest" "$url" || true; else wget -O "$dest" "$url" || true; fi
+		[[ -s "$dest" ]] || { rm -f "$dest"; die "download failed: $url
+    No network here? On clusters the compute nodes often cannot reach the internet: run
+    '$0 --only fetch' on a login node first (or copy the tarballs into $SRC), then rerun."; }
 	fi
 	if [[ -n "$sum" ]]; then
 		local got; got=$(sha256_of "$dest")
