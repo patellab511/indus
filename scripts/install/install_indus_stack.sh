@@ -79,6 +79,15 @@ GMX_CUDA_TARGET_SM="${GMX_CUDA_TARGET_SM:-}"   # e.g. "86" for an RTX 3080; empt
 
 OPT_FLAGS="${OPT_FLAGS:--O3 -g -fPIC}"          # shared by PLUMED and the INDUS driver
 
+# FFTW for GROMACS. Default: GROMACS builds its own from this tarball, which the fetch phase
+# downloads (compute nodes are often offline). Set USE_OWN_FFTW=no to use a site FFTW instead
+# and give its location through GROMACS_CMAKE_ARGS (-DGMX_FFT_LIBRARY=fftw3 ...).
+USE_OWN_FFTW="${USE_OWN_FFTW:-yes}"
+FFTW_VERSION="${FFTW_VERSION:-3.3.8}"            # the version GROMACS 2024 expects
+FFTW_URL="${FFTW_URL:-http://www.fftw.org/fftw-${FFTW_VERSION}.tar.gz}"
+FFTW_MD5="${FFTW_MD5:-$( [[ $FFTW_VERSION == 3.3.8 ]] && echo 8aac833c943d8e90d51b697b27d4384d || true )}"
+FFTW_SHA256="${FFTW_SHA256:-$( [[ $FFTW_VERSION == 3.3.8 ]] && echo 6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303 || true )}"
+
 # Extra, site-specific arguments appended verbatim (e.g. a cluster's FFTW or SIMD settings)
 GROMACS_CMAKE_ARGS="${GROMACS_CMAKE_ARGS:-}"        # e.g. "-DGMX_SIMD=AVX2_256 -DGMX_FFT_LIBRARY=fftw3"
 PLUMED_CONFIGURE_ARGS="${PLUMED_CONFIGURE_ARGS:-}"  # e.g. "--enable-modules=all"
@@ -149,6 +158,7 @@ stack:            $STACK
 PLUMED:           $PLUMED_VERSION  $PLUMED_URL
 GROMACS:          $GROMACS_VERSION  $GROMACS_URL  (patch engine: $PLUMED_PATCH_ENGINE)
 checksums:        plumed=${PLUMED_SHA256:-unchecked}  gromacs=${GROMACS_SHA256:-unchecked}
+FFTW:             own build = $USE_OWN_FFTW  (fftw $FFTW_VERSION, $FFTW_URL, sha256=${FFTW_SHA256:-unchecked})
 MPI:              $USE_MPI  (CC=$CC CXX=$CXX mpirun=$MPIRUN)
 GPU:              $USE_GPU  (CUDA_HOME=$CUDA_HOME, target SM: ${GMX_CUDA_TARGET_SM:-GROMACS default})
 OpenMP:           $USE_OPENMP
@@ -220,6 +230,7 @@ phase_fetch() {
 	cd "$SRC"
 	fetch_file "plumed-$PLUMED_VERSION.tgz"      "$PLUMED_URL"  "$PLUMED_SHA256"
 	fetch_file "gromacs-$GROMACS_VERSION.tar.gz" "$GROMACS_URL" "$GROMACS_SHA256"
+	[[ "$USE_OWN_FFTW" == yes ]] && fetch_file "fftw-$FFTW_VERSION.tar.gz" "$FFTW_URL" "$FFTW_SHA256"
 	[[ -d "$PLUMED_SRC" ]]  || tar xzf "plumed-$PLUMED_VERSION.tgz"
 	[[ -d "$GROMACS_SRC" ]] || tar xzf "gromacs-$GROMACS_VERSION.tar.gz"
 	ls -la "$SRC"
@@ -268,8 +279,14 @@ phase_patch_gromacs() {
 phase_build_gromacs() {
 	local bdir="$BUILD/gromacs-$GROMACS_VERSION"
 	mkdir -p "$bdir"; cd "$bdir"
-	local args=(-DCMAKE_INSTALL_PREFIX="$GROMACS_PREFIX" -DCMAKE_BUILD_TYPE=Release
-	            -DGMX_BUILD_OWN_FFTW=ON -DREGRESSIONTEST_DOWNLOAD=OFF)
+	local args=(-DCMAKE_INSTALL_PREFIX="$GROMACS_PREFIX" -DCMAKE_BUILD_TYPE=Release -DREGRESSIONTEST_DOWNLOAD=OFF)
+	if [[ "$USE_OWN_FFTW" == yes ]]; then
+		# built from the tarball the fetch phase downloaded, so this works offline
+		args+=(-DGMX_BUILD_OWN_FFTW=ON -DGMX_BUILD_OWN_FFTW_URL="$SRC/fftw-$FFTW_VERSION.tar.gz")
+		[[ -n "$FFTW_MD5" ]] && args+=(-DGMX_BUILD_OWN_FFTW_MD5="$FFTW_MD5")
+	else
+		args+=(-DGMX_BUILD_OWN_FFTW=OFF)
+	fi
 	if [[ "$USE_MPI" == yes ]]; then
 		args+=(-DGMX_MPI=ON -DMPI_C_COMPILER="$MPICC" -DMPI_CXX_COMPILER="$MPICXX")
 	else

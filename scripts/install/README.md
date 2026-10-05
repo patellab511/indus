@@ -57,14 +57,17 @@ multi-rank GROMACS, build with MPI.
 ```
 module load gcc/12 openmpi/4.1 cuda/12 cmake
 MPICC=mpicc MPICXX=mpicxx CUDA_HOME=$CUDA_HOME \
-GROMACS_CMAKE_ARGS="-DGMX_SIMD=AVX2_256 -DGMX_FFT_LIBRARY=fftw3 -DFFTWF_LIBRARY=$FFTW_ROOT/lib/libfftw3f.so -DFFTWF_INCLUDE_DIR=$FFTW_ROOT/include" \
+GROMACS_CMAKE_ARGS="-DGMX_SIMD=AVX2_256" \
 TEST_RANKS=4 TEST_THREADS=2 \
     scripts/install/install_indus_stack.sh --root $HOME/software/indus-stack --name gpu-node
 ```
 
 Compute nodes usually have no internet access, so run the `fetch` phase on the login node
 first (`--only fetch`, same `--root`/`--name`), then submit the rest as a job; completed
-phases are skipped. Build on a node of the same architecture you will run on, or set
+phases are skipped. The fetch includes the FFTW tarball GROMACS builds against, so nothing
+is downloaded during the build. To use the site's FFTW instead, set `USE_OWN_FFTW=no` and
+pass `-DGMX_FFT_LIBRARY=fftw3 -DFFTWF_LIBRARY=... -DFFTWF_INCLUDE_DIR=...` in
+`GROMACS_CMAKE_ARGS`. Build on a node of the same architecture you will run on, or set
 `GMX_SIMD` for the target. Load the same modules before `source <stack>/env.sh`. A job script
 that does this is in `scripts/install/examples/slurm_build_stack.sbatch`.
 
@@ -95,6 +98,7 @@ values. The most useful ones:
 | `MPICC`, `MPICXX`, `MPIRUN` | `mpicc`, `mpicxx`, next to `MPICC` | the MPI to build and test with |
 | `CC_SERIAL`, `CXX_SERIAL` | `gcc`, `g++` | compilers for GROMACS's CMake and non-MPI builds |
 | `CUDA_HOME`, `GMX_CUDA_TARGET_SM` | `/usr/local/cuda`, GROMACS default | CUDA toolkit and target architecture |
+| `USE_OWN_FFTW`, `FFTW_VERSION` | yes, 3.3.8 | GROMACS builds FFTW from a tarball fetched up front; `no` = use a site FFTW via `GROMACS_CMAKE_ARGS` |
 | `OPT_FLAGS` | `-O3 -g -fPIC` | PLUMED and driver optimization flags |
 | `GROMACS_CMAKE_ARGS`, `PLUMED_CONFIGURE_ARGS` | empty | appended verbatim to CMake / configure |
 | `JOBS` | all cores | parallel build jobs |
