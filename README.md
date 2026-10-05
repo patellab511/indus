@@ -87,15 +87,21 @@ using one full socket of 16 cores per row:
 | 16 x 1 | 46 | 97 |
 
 Going from 12 to 16 cores gained about 20 percent, so the system still scales at this size.
-For production on such a node: one 16-core socket per umbrella window, run as one MPI rank
-with 16 OpenMP threads, two windows per node; a 3 ns window takes about 80 minutes.
+The layouts from 1 x 16 to 8 x 2 are equivalent within the run-to-run noise of these short
+benchmarks; only one thread per rank is clearly slower. For production on such a node: one
+16-core socket per umbrella window, as one rank with 16 threads or a few ranks with several
+threads each, two windows per node; a 3 ns window takes about 80 minutes.
 
-INDUS runs on the CPU inside PLUMED and, with this many spheres, sets the step time:
-the GPU gives a factor of two with INDUS active against a factor of six for plain MD. Every
-rank evaluates the whole probe volume, so few ranks with many threads is the better layout
-with INDUS, while plain CPU MD prefers the opposite. The standalone driver processes the same
-system at about 45 ms per frame on 24 threads. The brute-force search over centers is the
-obvious target for a cell list.
+INDUS runs on the CPU inside PLUMED and, with this many spheres, sets the step time: the GPU
+gives a factor of two with INDUS active against a factor of six for plain MD. INDUS
+distributes the target atoms over MPI ranks by domain decomposition, so the per-atom work is
+shared either way; what grows with the rank count is the per-step overhead (every rank
+classifies all targets against the decomposition grid, receives all requested atoms from
+PLUMED, and takes part in the derivative exchange). That overhead is negligible up to a few
+ranks and about 15 percent at one thread per rank. On a single shared GPU, many ranks are
+much worse for GROMACS itself (52 ns/day at 12 x 1 without INDUS). The standalone driver
+processes the same system at about 45 ms per frame on 24 threads. The brute-force search
+over centers is the obvious target for a cell list.
 
 ## Installation
 
