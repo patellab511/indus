@@ -74,7 +74,19 @@ threads in total, split between MPI ranks and OpenMP threads per rank:
 | 6 x 2 | 124 | 71 | | |
 | 12 x 1 | 67 | 59 | 52 | 132 |
 
-ns/day. INDUS runs on the CPU inside PLUMED and, with this many spheres, sets the step time:
+ns/day. The same benchmark on a cluster node (chestnut at Penn: two Intel Xeon E5-2683 v4 at
+2.1 GHz, no GPU, built with the installer under gcc 9.2 and OpenMPI 4.1):
+
+| ranks x threads | CPU + INDUS | CPU, no INDUS |
+| --- | --- | --- |
+| 1 x 12 | 46 | 77 |
+| 2 x 6 | 44 | |
+| 3 x 4 | 41 | |
+| 4 x 3 | 45 | |
+| 6 x 2 | 43 | |
+| 12 x 1 | 41 | 77 |
+
+INDUS runs on the CPU inside PLUMED and, with this many spheres, sets the step time:
 the GPU gives a factor of two with INDUS active against a factor of six for plain MD. Every
 rank evaluates the whole probe volume, so few ranks with many threads is the better layout
 with INDUS, while plain CPU MD prefers the opposite. The standalone driver processes the same
