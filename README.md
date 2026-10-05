@@ -182,3 +182,12 @@ examples/              hydrophobin dewetting inputs
 manual/                LaTeX manual (input reference, umbrella sampling guidance)
 doc/images/            README figures and the PyMOL script that renders them
 ```
+
+## License
+
+Copyright (C) 2018-2026 The Trustees of the University of Pennsylvania. INDUS is distributed
+under the University of Pennsylvania non-commercial research license in [`LICENSE`](LICENSE):
+free to use, copy, and modify for non-profit research, with no distribution to commercial
+third parties without Penn's written approval. For commercial use contact the Penn Center for
+Innovation (215-898-9591). Versions up to the git tag `mit-license-final` were released under
+the MIT license, which continues to apply to those versions.
