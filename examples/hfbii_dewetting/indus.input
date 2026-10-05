@@ -1,0 +1,18 @@
+### INDUS (PLUMED mode): union of 0.6 nm spheres on the 245 solvent-exposed heavy atoms of HFBII ###
+# Water oxygens
+Target = [ atom_index 983-18449:3 ]
+
+ProbeVolume = {
+	type  = union_of_spheres
+	r_max = 0.6
+	reference_positions_file = ../../test/sample_traj/hfbii/exposed_heavy_atoms.pos   # or your own centers file
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# INDUS's own bias is off; the harmonic restraint is applied by PLUMED (plumed.dat)
+Bias = {
+	order_parameter = ntilde
+	x_star = 0.0
+	kappa  = 0.0
+}

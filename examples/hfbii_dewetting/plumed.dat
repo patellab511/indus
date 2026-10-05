@@ -1,0 +1,11 @@
+# Drive the water out of the 0.6 nm hydration shell of HFBII's exposed heavy atoms.
+# Ntilde(unbiased) ~ 542. Ramp the harmonic restraint center from 542 to 0 over 2 ns
+# (steps 0 -> 1,000,000 at dt = 2 fs), then hold at 0 for 1 ns.
+indus: INDUS INPUTFILE=indus.input
+r: MOVINGRESTRAINT ...
+   ARG=indus.ntilde
+   STEP0=0        AT0=542.0  KAPPA0=0.5
+   STEP1=1000000  AT1=0.0    KAPPA1=0.5
+   STEP2=1500000  AT2=0.0    KAPPA2=0.5
+...
+PRINT ARG=indus.n,indus.ntilde,r.bias,r.force2,r.work STRIDE=500 FILE=plumed.out

@@ -1,42 +1,86 @@
-# indus
-Implements the INDUS method for several probe volume geometries. Primarily for use as part of PLUMED.
+# INDUS
 
-Questions, comments, and concerns should be directed to the [INDUS Users' Google Group](https://groups.google.com/g/indus-users).
+[![tests](https://github.com/patellab511/indus/actions/workflows/tests.yml/badge.svg)](https://github.com/patellab511/indus/actions/workflows/tests.yml)
+
+INDUS (INDirect Umbrella Sampling) biases the coarse-grained number of waters, Ñ<sub>v</sub>,
+inside a probe volume *v*, so that the free energy of emptying that volume can be measured
+with umbrella sampling. The coarse-graining makes Ñ<sub>v</sub> a smooth function of the atomic
+coordinates, so it can be biased in molecular dynamics. This code implements INDUS for several
+probe volume geometries, as a PLUMED action for biased simulations and as a standalone program
+for analyzing trajectories.
+
+- A. J. Patel, P. Varilly, D. Chandler, *J. Phys. Chem. B* **114**, 1632 (2010)
+- A. J. Patel, S. Garde, *J. Phys. Chem. B* **118**, 1564 (2014)
+
+Questions, comments, and concerns should be directed to the
+[INDUS Users' Google Group](https://groups.google.com/g/indus-users). The full input reference
+is in `manual/plumed_indus_manual.pdf`.
 
 ## Probe volumes
 
-`sphere`, `box`, `cylinder`, and `union_of_spheres`. The union of spheres places one sphere
-(or spherical shell) on each position listed in a plain-text file and counts a water once no
-matter how many spheres it falls in: the coarse-grained indicator is
-`htilde_v = 1 - prod_k (1 - htilde_k)`. Centers are static. A typical use is the hydration
-shell of a solute, with one sphere on every solvent-exposed heavy atom:
+| `type` | Geometry | Main keys |
+| --- | --- | --- |
+| `sphere` | sphere or spherical shell | `center`, `r_max`, optional `r_min` |
+| `box` | axis-aligned box | `x_range`, `y_range`, `z_range` |
+| `cylinder` | cylinder along x, y or z | `axis`, `base`, `radius`, `height` |
+| `union_of_spheres` | union of spheres (or shells) on a list of fixed positions | `reference_positions_file`, `r_max`, optional `r_min` |
+
+All take `sigma` (default 0.01 nm) and `alpha_c` (default 0.02 nm) for the coarse-graining.
+
+The union of spheres counts a water once no matter how many spheres it falls in: the
+coarse-grained indicator is `htilde_v = 1 - prod_k (1 - htilde_k)` over the spheres *k*, and
+its derivative follows from the product rule. The centers are static and come from a plain
+text file with one `x y z` (nm) per line. A typical use is the hydration shell of a solute,
+with one sphere on every solvent-exposed heavy atom:
 
 ```
 ProbeVolume = {
 	type  = union_of_spheres          # alias: union_of_spherical_shells
-	r_max = 0.6                       # [nm]; optional r_min for shells
-	reference_positions_file = centers.pos   # one "x y z" (nm) per line, '#' comments
+	r_max = 0.6                       # [nm]
+	reference_positions_file = centers.pos
 	sigma   = 0.01
 	alpha_c = 0.02
 }
 ```
 
+## Example: dewetting hydrophobin HFBII
+
+Hydrophobin HFBII (PDB 2B97, chain A, 70 residues) in SPC/E water with AMBER99SB-ILDN, protein
+heavy atoms position-restrained. The probe volume is the union of 0.6 nm spheres on the 245
+solvent-exposed heavy atoms, found with `gmx sasa`. Unbiased, the union holds Ñ<sub>v</sub> =
+542 ± 8 waters over 5 ns. A harmonic restraint on Ñ<sub>v</sub> (PLUMED `MOVINGRESTRAINT`,
+kappa = 0.5 kJ/mol) was then ramped from 542 to 0 over 2 ns and held at 0 for 1 ns.
+
 ![HFBII surface colored by the number of water oxygens within 0.6 nm of each atom, at Ntilde = 542, 282, 151 and 38 as a union-of-spheres restraint drives it to 0](doc/images/hfbii_union_of_spheres_hydration.png)
 
-*Hydrophobin HFBII (PDB 2B97) in SPC/E water, protein heavy atoms restrained, surface colored
-by the number of water oxygens within 0.6 nm of each atom. The probe volume is the union of
-0.6 nm spheres on the 245 solvent-exposed heavy atoms. A harmonic restraint on Ntilde (PLUMED
-`MOVINGRESTRAINT`, kappa = 0.5 kJ/mol) was ramped from 542 to 0 over 2 ns and held at 0 for
-1 ns; the panels show Ntilde = 542 (unbiased), 282, 151 and 38 (end of the hold). The
-remaining water sits mostly near polar and charged residues. GROMACS 2024.3 + PLUMED 2.9.4 built
-with the installer below; rendered with open-source PyMOL from
-`doc/images/hfbii_union_of_spheres_hydration.pml`.*
+*Surface colored by the number of water oxygens within 0.6 nm of each protein atom, at
+Ñ<sub>v</sub> = 542 (unbiased), 282, 151 and 38 (end of the hold). One face dewets early; the
+water that remains at the end sits near polar and charged residues (Thr30, Asp34, Lys49,
+Lys66, Gln60, the N-terminus).*
 
-## Building the whole stack
+![Ntilde versus time following the moving restraint from 542 to 0, then plateauing near 38](doc/images/hfbii_ntilde_vs_time.png)
 
-`scripts/install/install_indus_stack.sh` builds a tested INDUS + PLUMED + GROMACS stack from
-pristine sources into one prefix (defaults: PLUMED 2.9.4, GROMACS 2024.3, MPI on, CUDA if
-`nvcc` is found). Every setting is an environment variable; see the header of the script.
+*Ñ<sub>v</sub> follows the moving target with a lag of 5 to 12 waters for most of the ramp,
+then lags by up to 47 as the last, tightly bound water resists; 37 to 39 waters remain with
+the target at 0. The box edge grew from 5.68 to 5.90 nm at 1 bar as the vapor layer formed.
+The ramp is a non-equilibrium pull: the accumulated restraint work, about 1,270 kT, is an upper
+bound on the dewetting free energy, not the free energy itself. For that, hold windows at fixed
+N\* and combine them with WHAM as described in the manual.*
+
+The inputs are in `examples/hfbii_dewetting/`. The run used GROMACS 2024.3 + PLUMED 2.9.4 built
+with the installer below; on an RTX 3080 with 12 CPU cores it ran at 170 ns/day with INDUS
+active, against 826 ns/day without, since the 245-sphere search is evaluated on the CPU every
+step.
+
+## Installation
+
+### Everything at once
+
+`scripts/install/install_indus_stack.sh` builds a tested stack from pristine sources into one
+prefix: PLUMED with INDUS patched in, GROMACS patched with that PLUMED (runtime mode), and the
+standalone driver, followed by the tests below and a manifest with versions, flags and
+results. Defaults are PLUMED 2.9.4 and GROMACS 2024.3 with MPI, OpenMP, and CUDA when `nvcc`
+is found. Every setting is an environment variable; see the header of the script.
 
 ```
 MPICC=/path/to/mpicc MPICXX=/path/to/mpicxx CUDA_HOME=/usr/local/cuda \
@@ -44,12 +88,63 @@ MPICC=/path/to/mpicc MPICXX=/path/to/mpicxx CUDA_HOME=/usr/local/cuda \
 source $HOME/programs/indus-stack/gromacs-2024.3_plumed-2.9.4/env.sh
 ```
 
-The last phase runs the standalone regression tests (`test/`), the PLUMED-driver tests
-(`plumed_patch/test/`), and a short MD with INDUS active, and writes a manifest with versions,
-flags, and results.
+Phases can be rerun individually with `--only <phase>` or resumed with `--from <phase>`;
+`--list` shows them.
+
+### Standalone driver only
+
+Needs CMake 3.15+ and a C++11 compiler; the xdrfile library for reading xtc files is included.
+
+```
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DMPI_ENABLED=ON -DOPENMP_ENABLED=ON -DGPTL_ENABLED=OFF
+cmake --build build -j
+build/bin/indus indus.input      # with GroFile and XtcFile set in indus.input
+```
+
+Set `-DMPI_ENABLED=OFF` to build without MPI. `make check` runs the regression tests.
+
+### Into an existing PLUMED source tree
+
+```
+plumed_patch/patch_plumed.sh /path/to/plumed2        # copies src/ into a PLUMED module
+cd /path/to/plumed2
+CXXFLAGS="-O3 -fPIC -std=c++11 -fopenmp -DMPI_ENABLED" ./configure --prefix=... --enable-mpi
+make -j && make install
+```
+
+Then patch your MD code with PLUMED as usual. In `plumed.dat`:
+
+```
+indus: INDUS INPUTFILE=indus.input
+r: RESTRAINT ARG=indus.ntilde AT=20.0 KAPPA=0.5
+PRINT ARG=indus.n,indus.ntilde,r.bias STRIDE=100 FILE=plumed.out
+```
 
 ## Tests
 
-`make check` (or `ctest` in the build directory) runs the standalone driver against stored
-reference outputs. The references for `union_of_spheres` were validated independently with
-PyTorch autograd; see `test/reference_generators/`.
+- `ctest` in the build directory (or `make check`): the standalone driver against stored
+  reference outputs for every probe volume, serially and with 4 MPI ranks x 2 OpenMP threads.
+  The GitHub Actions workflow runs this on every push.
+- `plumed_patch/test/run_tests.sh <plumed>`: INDUS inside PLUMED via `plumed driver`, one test
+  per probe volume on the same trajectories as the standalone tests. Their references were
+  checked against the standalone references (identical forces to the printed precision).
+- `test/reference_generators/`: PyTorch autograd re-implementations that validate the
+  reference outputs independently of the C++ (need `torch` and `MDAnalysis`; not part of
+  `ctest`). The `union_of_spheres` references match autograd on all 5,823 water oxygens of the
+  HFBII frames to 5e-6 kJ/mol/nm.
+- The installer's test phase runs all of the above plus a short MD with INDUS active under
+  the built GROMACS, checking PLUMED's Ñ<sub>v</sub> against the standalone driver at every step.
+
+## Layout
+
+```
+src/orderparameters/   the code: probe volumes, Indus, switching functions, MPI/OpenMP wrappers
+src/driver/            main() of the standalone program
+src/xdrfile/           vendored xtc/trr reader
+plumed_patch/          PLUMED module files, patch script, PLUMED-driver tests
+scripts/install/       all-in-one installer
+test/                  regression tests, sample trajectories, reference generators
+examples/              hydrophobin dewetting inputs
+manual/                LaTeX manual (input reference, umbrella sampling guidance)
+doc/images/            README figures and the PyMOL script that renders them
+```
