@@ -321,6 +321,10 @@ phase_build_indus() {
 
 phase_test() {
 	stack_env
+	# The parallel tests launch TEST_RANKS processes regardless of how many "slots" the
+	# environment advertises (e.g. a SLURM job with --ntasks=1, or a 2-core CI runner).
+	# OpenMPI honors this; other MPIs ignore it.
+	export OMPI_MCA_rmaps_base_oversubscribe=1
 	local results="$STACK/test-results.txt"; : > "$results"
 	# 1) standalone driver regression tests (test/CMakeLists.txt)
 	( cd "$BUILD/indus" && ctest --output-on-failure ) && echo "indus ctest: PASS" >> "$results" || echo "indus ctest: FAIL" >> "$results"

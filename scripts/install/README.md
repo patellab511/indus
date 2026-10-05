@@ -153,5 +153,9 @@ Results go to `<stack>/test-results.txt` and the manifest.
 - **`QOSMaxWallDurationPerJobLimit` or similar when submitting**: the partition caps the job
   time; the whole build takes 20 to 40 minutes on 16 to 32 cores, and `--from <phase>` resumes
   if a job is cut off.
+- **`There are not enough slots available`** from `mpirun` in the test phase: the job or
+  machine advertises fewer MPI slots than `TEST_RANKS`. The installer sets
+  `OMPI_MCA_rmaps_base_oversubscribe=1` for its tests, which OpenMPI honors; with another
+  MPI, request `--ntasks=4` in the job or lower `TEST_RANKS`.
 - **A phase failed**: read `<stack>/logs/<phase>.log`, fix the cause, rerun with
   `--from <phase>`.
