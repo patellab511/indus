@@ -54,9 +54,12 @@ kappa = 0.5 kJ/mol) was then ramped from 542 to 0 over 2 ns and held at 0 for 1 
 ![HFBII surface colored by the number of water oxygens within 0.6 nm of each atom, at Ntilde = 542, 282, 151 and 38 as a union-of-spheres restraint drives it to 0](doc/images/hfbii_union_of_spheres_hydration.png)
 
 *Surface colored by the number of water oxygens within 0.6 nm of each protein atom, at
-Ñ<sub>v</sub> = 542 (unbiased), 282, 151 and 38 (end of the hold). One face dewets early; the
-water that remains at the end sits near polar and charged residues (Thr30, Asp34, Lys49,
-Lys66, Gln60, the N-terminus).*
+Ñ<sub>v</sub> = 542 (unbiased), 282, 151 and 38 (end of the hold). The dashed outline is the
+hydrophobic patch (Leu7, Val18, Leu19, Leu21, Ile22, Val24, Val54, Val57, Ala58, Ala61,
+Leu62, Leu63), the face with which HFBII adsorbs at the air-water interface. It is the first
+region to dewet; the water that remains at the end sits near polar and charged residues on
+the opposite face (Thr30, Asp34, Lys49, Lys66, Gln60, the N-terminus). Rendered with
+open-source PyMOL and composed with the scripts in `doc/images/`.*
 
 The inputs are in `examples/hfbii_dewetting/`.
 
