@@ -58,12 +58,6 @@ kappa = 0.5 kJ/mol) was then ramped from 542 to 0 over 2 ns and held at 0 for 1 
 water that remains at the end sits near polar and charged residues (Thr30, Asp34, Lys49,
 Lys66, Gln60, the N-terminus).*
 
-Ñ<sub>v</sub> followed the moving target with a lag of 5 to 12 waters for most of the ramp and
-by up to 47 at the end; 37 to 39 waters remain with the target at 0. The ramp is a
-non-equilibrium pull: the accumulated restraint work, about 1,270 kT, is an upper bound on the
-dewetting free energy, not the free energy itself. For that, hold windows at fixed N\* and
-combine them with WHAM as described in the manual.
-
 The inputs are in `examples/hfbii_dewetting/`. The run used GROMACS 2024.3 + PLUMED 2.9.4 built
 with the installer below; on an RTX 3080 with 12 CPU cores it ran at 170 ns/day with INDUS
 active, against 826 ns/day without, since the 245-sphere search is evaluated on the CPU every
