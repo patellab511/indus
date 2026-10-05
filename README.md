@@ -62,24 +62,24 @@ The inputs are in `examples/hfbii_dewetting/`.
 
 **Throughput on this system** (18,451 atoms; 5,823 water oxygens against 245 spheres evaluated
 every step), GROMACS 2024.3 + PLUMED 2.9.4 from the installer below, one AMD Ryzen 9 5900X
-(12 cores) and one NVIDIA RTX 3080, 2 fs steps, 3000-step benchmarks:
+(12 cores) and one NVIDIA RTX 3080, 2 fs steps, 3000-step benchmarks. Every row uses 12
+threads in total, split between MPI ranks and OpenMP threads per rank:
 
-| Configuration | MPI ranks x OpenMP threads | ns/day |
-| --- | --- | --- |
-| GPU, no INDUS | 1 x 12 | 826 |
-| GPU + INDUS union of spheres | 1 x 12 | 160 |
-| GPU + INDUS union of spheres | 1 x 24 | 119 |
-| GPU + INDUS union of spheres | 2 x 12 | 73 |
-| GPU + INDUS union of spheres | 4 x 6 | 68 |
-| CPU only, no INDUS | 1 x 12 | 143 |
-| CPU only + INDUS union of spheres | 1 x 12 | 84 |
-| CPU only + INDUS union of spheres | 12 x 1 | 54 |
+| ranks x threads | GPU + INDUS | CPU + INDUS | GPU, no INDUS | CPU, no INDUS |
+| --- | --- | --- | --- | --- |
+| 1 x 12 | 149 | 71 | 664 | 101 |
+| 2 x 6 | 107 | 71 | | |
+| 3 x 4 | 122 | 77 | | |
+| 4 x 3 | 119 | 77 | | |
+| 6 x 2 | 124 | 71 | | |
+| 12 x 1 | 67 | 59 | 52 | 132 |
 
-INDUS runs on the CPU inside PLUMED and, with this many spheres, sets the step time: the GPU
-buys a factor of two with INDUS active rather than the factor of six it gives plain MD. One
-MPI rank with OpenMP threads is the right layout, since every rank evaluates the whole probe
-volume. The standalone driver processes the same system at about 45 ms per frame on 24
-threads. The brute-force search over centers is the obvious target for a cell list.
+ns/day. INDUS runs on the CPU inside PLUMED and, with this many spheres, sets the step time:
+the GPU gives a factor of two with INDUS active against a factor of six for plain MD. Every
+rank evaluates the whole probe volume, so few ranks with many threads is the better layout
+with INDUS, while plain CPU MD prefers the opposite. The standalone driver processes the same
+system at about 45 ms per frame on 24 threads. The brute-force search over centers is the
+obvious target for a cell list.
 
 ## Installation
 
