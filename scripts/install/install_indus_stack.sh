@@ -21,8 +21,13 @@
 #     --from PHASE     start at PHASE and run the rest
 #     --only PHASE     run just PHASE
 #     --list           list phases and exit
+#     --print-config   show the resolved settings and exit (nothing is built)
+#     --config FILE    read settings (NAME=value lines, shell syntax) from FILE first
 #   Every setting in the CONFIG block below can also be overridden with an
 #   environment variable of the same name, e.g.  GROMACS_VERSION=2023.5 PLUMED_VERSION=2.9.1 ...
+#   Precedence: command-line flags > environment > --config file > defaults.
+#   An annotated example is scripts/install/stack.conf.example.
+#   Worked examples (GPU workstation, CPU laptop, cluster with modules): scripts/install/README.md
 #
 # Layout of a finished stack:
 #   $STACK/{src,build,logs,stamps}   sources, build trees, one log per phase, done-markers
@@ -30,6 +35,16 @@
 #   $STACK/env.sh                    source this to use the stack
 #   $STACK/manifest.txt              versions, flags, INDUS commit, test results
 set -euo pipefail
+
+# --config FILE is applied before the defaults below, so the file can set any CONFIG variable.
+# Variables already set in the environment keep their value (environment beats file).
+for (( i=1; i<=$#; i++ )); do
+	if [[ "${!i}" == --config ]]; then
+		j=$((i+1)); config_file="${!j}"
+		[[ -f "$config_file" ]] || { echo "ERROR: config file not found: $config_file" >&2; exit 1; }
+		set -a; eval "$(sed -E 's/^([A-Za-z_][A-Za-z0-9_]*)=/\1=${\1:-}; [[ -n "${\1}" ]] || \1=/' "$config_file")"; set +a
+	fi
+done
 
 ############################################################
 ### CONFIG  (override any of these from the environment) ###
@@ -42,10 +57,14 @@ PLUMED_PATCH_ENGINE="${PLUMED_PATCH_ENGINE:-gromacs-${GROMACS_VERSION}}"
 
 PLUMED_URL="${PLUMED_URL:-https://github.com/plumed/plumed2/releases/download/v${PLUMED_VERSION}/plumed-${PLUMED_VERSION}.tgz}"
 GROMACS_URL="${GROMACS_URL:-https://ftp.gromacs.org/gromacs/gromacs-${GROMACS_VERSION}.tar.gz}"
+# SHA-256 of the tarballs. Known for the default versions (computed from the official
+# downloads, 2026-10-05); set them yourself for other versions, or leave empty to skip the check.
+PLUMED_SHA256="${PLUMED_SHA256:-$( [[ $PLUMED_VERSION == 2.9.4 ]] && echo 032c99bda66b20f0710e38872b7f3fa069ad647b5f73e83a26228f60052bb54d || true )}"
+GROMACS_SHA256="${GROMACS_SHA256:-$( [[ $GROMACS_VERSION == 2024.3 ]] && echo bbda056ee59390be7d58d84c13a9ec0d4e3635617adf2eb747034922cba1f029 || true )}"
 
 STACK_ROOT="${STACK_ROOT:-$HOME/programs/indus-stack}"
 STACK_NAME="${STACK_NAME:-gromacs-${GROMACS_VERSION}_plumed-${PLUMED_VERSION}}"
-JOBS="${JOBS:-$(nproc)}"
+JOBS="${JOBS:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
 
 USE_MPI="${USE_MPI:-yes}"            # yes|no
 USE_GPU="${USE_GPU:-auto}"           # yes|no|auto (auto = yes if nvcc is found)
@@ -60,6 +79,10 @@ GMX_CUDA_TARGET_SM="${GMX_CUDA_TARGET_SM:-}"   # e.g. "86" for an RTX 3080; empt
 
 OPT_FLAGS="${OPT_FLAGS:--O3 -g -fPIC}"          # shared by PLUMED and the INDUS driver
 
+# Extra, site-specific arguments appended verbatim (e.g. a cluster's FFTW or SIMD settings)
+GROMACS_CMAKE_ARGS="${GROMACS_CMAKE_ARGS:-}"        # e.g. "-DGMX_SIMD=AVX2_256 -DGMX_FFT_LIBRARY=fftw3"
+PLUMED_CONFIGURE_ARGS="${PLUMED_CONFIGURE_ARGS:-}"  # e.g. "--enable-modules=all"
+
 # Test phase: MPI ranks x OpenMP threads for the parallel tests
 TEST_RANKS="${TEST_RANKS:-4}"
 TEST_THREADS="${TEST_THREADS:-2}"
@@ -71,7 +94,7 @@ TEST_THREADS="${TEST_THREADS:-2}"
 INDUS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PHASES=(fetch patch-plumed build-plumed patch-gromacs build-gromacs build-indus test env)
 
-from_phase=""; only_phase=""
+from_phase=""; only_phase=""; print_config=0
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--root)   STACK_ROOT="$2"; shift 2 ;;
@@ -82,7 +105,9 @@ while [[ $# -gt 0 ]]; do
 		--from)   from_phase="$2"; shift 2 ;;
 		--only)   only_phase="$2"; shift 2 ;;
 		--list)   printf '%s\n' "${PHASES[@]}"; exit 0 ;;
-		-h|--help) sed -n '2,32p' "$0"; exit 0 ;;
+		--print-config) print_config=1; shift ;;
+		--config) shift 2 ;;   # already applied above
+		-h|--help) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 		*) echo "unknown option: $1" >&2; exit 1 ;;
 	esac
 done
@@ -118,6 +143,56 @@ stack_env() {
 	export PLUMED_KERNEL="$PLUMED_PREFIX/lib/libplumedKernel.so"
 }
 
+show_config() {
+	cat <<EOF
+stack:            $STACK
+PLUMED:           $PLUMED_VERSION  $PLUMED_URL
+GROMACS:          $GROMACS_VERSION  $GROMACS_URL  (patch engine: $PLUMED_PATCH_ENGINE)
+checksums:        plumed=${PLUMED_SHA256:-unchecked}  gromacs=${GROMACS_SHA256:-unchecked}
+MPI:              $USE_MPI  (CC=$CC CXX=$CXX mpirun=$MPIRUN)
+GPU:              $USE_GPU  (CUDA_HOME=$CUDA_HOME, target SM: ${GMX_CUDA_TARGET_SM:-GROMACS default})
+OpenMP:           $USE_OPENMP
+flags:            OPT_FLAGS='$OPT_FLAGS'  GROMACS_CMAKE_ARGS='$GROMACS_CMAKE_ARGS'  PLUMED_CONFIGURE_ARGS='$PLUMED_CONFIGURE_ARGS'
+jobs:             $JOBS      tests: $TEST_RANKS ranks x $TEST_THREADS threads
+INDUS source:     $INDUS_ROOT
+EOF
+}
+
+# Fail early, with the setting to change, rather than deep inside a build
+check_prerequisites() {
+	need tar; need make; need cmake
+	command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || die "need curl or wget to download sources"
+	command -v "$CC"  >/dev/null 2>&1 || die "C compiler '$CC' not found (set MPICC, or CC_SERIAL with --no-mpi)"
+	command -v "$CXX" >/dev/null 2>&1 || die "C++ compiler '$CXX' not found (set MPICXX, or CXX_SERIAL with --no-mpi)"
+	if [[ "$USE_MPI" == yes ]]; then
+		[[ -x "$MPIRUN" ]] || die "mpirun not found at '$MPIRUN' (set MPIRUN, or use --no-mpi)"
+	fi
+	if [[ "$USE_GPU" == yes ]]; then
+		[[ -x "$CUDA_HOME/bin/nvcc" ]] || die "nvcc not found at '$CUDA_HOME/bin/nvcc' (set CUDA_HOME, or use --no-gpu)"
+	fi
+	local cmake_ver; cmake_ver=$(cmake --version | awk 'NR==1{print $3}')
+	echo "    tools: cmake $cmake_ver, $("$CXX" --version 2>/dev/null | head -1)"
+}
+
+sha256_of() {
+	if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{print $1}'
+	else shasum -a 256 "$1" | awk '{print $1}'; fi
+}
+
+fetch_file() {   # fetch_file DEST URL [SHA256]
+	local dest="$1" url="$2" sum="${3:-}"
+	if [[ ! -f "$dest" ]]; then
+		if command -v curl >/dev/null 2>&1; then curl -L --fail -o "$dest" "$url"; else wget -O "$dest" "$url"; fi
+	fi
+	if [[ -n "$sum" ]]; then
+		local got; got=$(sha256_of "$dest")
+		[[ "$got" == "$sum" ]] || die "checksum mismatch for $dest: expected $sum, got $got (delete the file to re-download)"
+		echo "checksum ok: $(basename "$dest")"
+	else
+		echo "checksum not verified (no SHA256 given): $(basename "$dest")"
+	fi
+}
+
 # run_phase NAME: skip if already done, else run phase_NAME with output in logs/NAME.log
 run_phase() {
 	local name="$1" fn="phase_${1//-/_}"
@@ -140,10 +215,8 @@ run_phase() {
 
 phase_fetch() {
 	cd "$SRC"
-	for item in "plumed-$PLUMED_VERSION.tgz|$PLUMED_URL" "gromacs-$GROMACS_VERSION.tar.gz|$GROMACS_URL"; do
-		local file="${item%%|*}" url="${item#*|}"
-		[[ -f "$file" ]] || curl -L --fail -o "$file" "$url"
-	done
+	fetch_file "plumed-$PLUMED_VERSION.tgz"      "$PLUMED_URL"  "$PLUMED_SHA256"
+	fetch_file "gromacs-$GROMACS_VERSION.tar.gz" "$GROMACS_URL" "$GROMACS_SHA256"
 	[[ -d "$PLUMED_SRC" ]]  || tar xzf "plumed-$PLUMED_VERSION.tgz"
 	[[ -d "$GROMACS_SRC" ]] || tar xzf "gromacs-$GROMACS_VERSION.tar.gz"
 	ls -la "$SRC"
@@ -165,8 +238,9 @@ phase_build_plumed() {
 	if [[ "$USE_OPENMP" == yes ]]; then flags="$flags -fopenmp"; conf+=(--enable-openmp); else conf+=(--disable-openmp); fi
 	# -DMPI_ENABLED / -fopenmp are what the INDUS module keys its MPI and OpenMP code on
 	local ldflags=""; [[ "$USE_OPENMP" == yes ]] && ldflags="-fopenmp"
+	# shellcheck disable=SC2086  (PLUMED_CONFIGURE_ARGS is meant to word-split)
 	CC="$CC" CXX="$CXX" CFLAGS="$flags" CXXFLAGS="$flags" LDFLAGS="$ldflags" LIBS="-lstdc++" \
-		./configure "${conf[@]}"
+		./configure "${conf[@]}" $PLUMED_CONFIGURE_ARGS
 	make -j "$JOBS"
 	make install
 	# Warnings from the INDUS module only, for the record
@@ -176,6 +250,11 @@ phase_build_plumed() {
 
 phase_patch_gromacs() {
 	stack_env
+	if ! plumed patch -l 2>/dev/null | grep -qw "$PLUMED_PATCH_ENGINE"; then
+		echo "PLUMED $PLUMED_VERSION has no patch named '$PLUMED_PATCH_ENGINE'. Available:"
+		plumed patch -l 2>/dev/null | grep -E '^\s*[a-z]' | tr -s ' \n' ' '; echo
+		die "set GROMACS_VERSION to a supported release, or PLUMED_PATCH_ENGINE to one of the names above"
+	fi
 	cd "$GROMACS_SRC"
 	[[ -f .indus-plumed-patched ]] && plumed patch -r --engine "$PLUMED_PATCH_ENGINE" || true
 	# runtime mode: GROMACS loads the kernel named by $PLUMED_KERNEL, so kernels can be swapped later
@@ -202,7 +281,8 @@ phase_build_gromacs() {
 		args+=(-DGMX_GPU=OFF)
 	fi
 	# Plain system compilers here; MPI comes in through the MPI_*_COMPILER hints (nvcc dislikes wrappers)
-	CC="$CC_SERIAL" CXX="$CXX_SERIAL" cmake "$GROMACS_SRC" "${args[@]}"
+	# shellcheck disable=SC2086  (GROMACS_CMAKE_ARGS is meant to word-split)
+	CC="$CC_SERIAL" CXX="$CXX_SERIAL" cmake "$GROMACS_SRC" "${args[@]}" $GROMACS_CMAKE_ARGS
 	make -j "$JOBS"
 	make install
 	stack_env; "$(gmx_bin)" --version | grep -E 'GROMACS version|MPI library|GPU support|OpenMP'
@@ -245,7 +325,8 @@ md_smoke_test() {
 	# short minimization first: a freshly solvated box has close contacts that break SETTLE
 	printf 'integrator=steep\nnsteps=200\nemtol=1000\nnstlist=10\nrcoulomb=1.0\nrvdw=1.0\ncoulombtype=PME\n' > em.mdp
 	"$gmx" grompp -f em.mdp -c water.gro -p topol.top -o em.tpr -maxwarn 2 > grompp_em.log 2>&1 || { cat grompp_em.log; return 1; }
-	"$gmx" mdrun -deffnm em -ntomp "$TEST_THREADS" > mdrun_em.log 2>&1 || { tail -20 mdrun_em.log; return 1; }
+	local ntmpi=(); [[ "$USE_MPI" == yes ]] || ntmpi=(-ntmpi 1)   # thread-MPI GROMACS wants -ntmpi with -ntomp
+	"$gmx" mdrun -deffnm em "${ntmpi[@]}" -ntomp "$TEST_THREADS" > mdrun_em.log 2>&1 || { tail -20 mdrun_em.log; return 1; }
 	# every step goes to md.xtc at high precision so the standalone driver can recompute Ntilde per frame
 	printf 'integrator=md\nnsteps=500\ndt=0.002\nnstlist=10\nrcoulomb=1.0\nrvdw=1.0\ncoulombtype=PME\ntcoupl=v-rescale\ntc-grps=System\ntau_t=0.5\nref_t=300\nconstraints=h-bonds\ngen_vel=yes\ngen_temp=300\nnstcalcenergy=1\nnstxout-compressed=1\ncompressed-x-precision=100000\n' > md.mdp
 	printf 'Target = [ atom_index 1-%d:3 ]\nProbeVolume = {\n  type = sphere\n  center = [ 1.5 1.5 1.5 ]\n  r_max = 0.6\n  sigma = 0.01\n  alpha_c = 0.02\n}\nBias = {\n  order_parameter = ntilde\n  x_star = 0.0\n  kappa = 0.0\n}\n' "$((nsol*3))" > indus.input
@@ -254,7 +335,9 @@ md_smoke_test() {
 	if [[ "$USE_MPI" == yes ]]; then
 		"$MPIRUN" -np "$TEST_RANKS" "$gmx" mdrun -deffnm md -plumed plumed.dat -ntomp "$TEST_THREADS" > mdrun.log 2>&1 || { tail -30 mdrun.log; return 1; }
 	else
-		"$gmx" mdrun -deffnm md -plumed plumed.dat -ntmpi "$TEST_RANKS" -ntomp "$TEST_THREADS" > mdrun.log 2>&1 || { tail -30 mdrun.log; return 1; }
+		# A PLUMED built without MPI cannot take the communicator GROMACS passes when it runs
+		# more than one thread-MPI rank, so a --no-mpi stack runs GROMACS with one rank
+		"$gmx" mdrun -deffnm md -plumed plumed.dat -ntmpi 1 -ntomp $((TEST_RANKS * TEST_THREADS)) > mdrun.log 2>&1 || { tail -30 mdrun.log; return 1; }
 	fi
 	# Standalone driver on the MD trajectory: Ntilde must match what PLUMED printed at every step
 	# (xtc positions carry 1e-5 nm rounding, so allow 1e-2 on Ntilde)
@@ -272,6 +355,7 @@ export INDUS_STACK="$STACK"
 export PATH="$GROMACS_PREFIX/bin:$PLUMED_PREFIX/bin:$INDUS_PREFIX/bin:\$PATH"
 export LD_LIBRARY_PATH="$PLUMED_PREFIX/lib:$GROMACS_PREFIX/lib:\${LD_LIBRARY_PATH:-}"
 export PLUMED_KERNEL="$PLUMED_PREFIX/lib/libplumedKernel.so"
+$([[ "$USE_MPI" == yes ]] && echo "export PATH=\"$(dirname "$MPIRUN"):\$PATH\"   # the MPI this stack was built with")
 EOF
 	{
 		echo "built on $(date) by $(whoami)@$(hostname)"
@@ -289,11 +373,13 @@ EOF
 ### Main                                                 ###
 ############################################################
 
-need curl; need tar; need make; need cmake; need "$CC"; need "$CXX"
-mkdir -p "$SRC" "$BUILD" "$LOGS" "$STAMPS"
+if [[ $print_config -eq 1 ]]; then show_config; exit 0; fi
 say "stack: $STACK"
 echo "    PLUMED $PLUMED_VERSION, GROMACS $GROMACS_VERSION (patch $PLUMED_PATCH_ENGINE), INDUS from $INDUS_ROOT"
-echo "    MPI=$USE_MPI GPU=$USE_GPU OpenMP=$USE_OPENMP  CC=$CC CXX=$CXX  jobs=$JOBS"
+echo "    MPI=$USE_MPI GPU=$USE_GPU OpenMP=$USE_OPENMP  CC=$CC CXX=$CXX  jobs=$JOBS  (--print-config shows everything)"
+check_prerequisites
+mkdir -p "$SRC" "$BUILD" "$LOGS" "$STAMPS"
+show_config > "$STACK/config.txt"
 
 started=0
 for p in "${PHASES[@]}"; do

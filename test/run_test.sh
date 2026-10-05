@@ -151,15 +151,16 @@ if [[ $passed_test -eq 1 ]]; then
 			continue
 		fi
 
-		# Compare files
-		diff_out=$( diff $output_file ref/$output_file )
+		# Compare files, ignoring comment lines ('#...'): the header records the build
+		# configuration (MPI on/off, rank count, ...) and must not affect the result
+		diff_out=$( diff <( grep -v '^#' $output_file ) <( grep -v '^#' ref/$output_file ) )
 		if [[ ! -z $diff_out ]]; then
 			passed_test=0
 			echo "  FAILED"
 
 			if [[ $echo_failed_diffs -eq 1 ]]; then
-				echo "  diff $output_file ref/$output_file"
-				diff $output_file ref/$output_file
+				echo "  diff $output_file ref/$output_file  (comment lines ignored)"
+				echo "$diff_out"
 				echo ""
 			fi
 		fi

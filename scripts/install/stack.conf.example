@@ -1,0 +1,37 @@
+# Example settings file for scripts/install/install_indus_stack.sh
+#   scripts/install/install_indus_stack.sh --config my-stack.conf
+# Plain NAME=value lines (shell syntax). Anything set in the environment overrides this
+# file; command-line flags override both. Unset lines fall back to the script's defaults.
+
+# Versions (the PLUMED release must ship a patch for the GROMACS release; plumed patch -l)
+PLUMED_VERSION=2.9.4
+GROMACS_VERSION=2024.3
+
+# Where to put the stack: $STACK_ROOT/$STACK_NAME
+STACK_ROOT=$HOME/programs/indus-stack
+#STACK_NAME=gpu-workstation
+
+# Parallelism: yes|no; USE_GPU may also be 'auto' (yes if nvcc is found)
+USE_MPI=yes
+USE_GPU=auto
+USE_OPENMP=yes
+
+# Compilers. Give full paths when more than one MPI is installed.
+MPICC=mpicc
+MPICXX=mpicxx
+#MPIRUN=/usr/local/bin/mpirun
+CC_SERIAL=gcc
+CXX_SERIAL=g++
+
+# CUDA toolkit and GPU architecture (compute capability, e.g. 86 for an RTX 3080; empty = GROMACS default set)
+CUDA_HOME=/usr/local/cuda
+#GMX_CUDA_TARGET_SM=86
+
+# Site-specific extras, appended verbatim
+#GROMACS_CMAKE_ARGS="-DGMX_SIMD=AVX2_256 -DGMX_FFT_LIBRARY=fftw3"
+#PLUMED_CONFIGURE_ARGS=""
+
+# Build and test parallelism
+#JOBS=8
+TEST_RANKS=4
+TEST_THREADS=2

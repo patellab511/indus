@@ -58,10 +58,28 @@ kappa = 0.5 kJ/mol) was then ramped from 542 to 0 over 2 ns and held at 0 for 1 
 water that remains at the end sits near polar and charged residues (Thr30, Asp34, Lys49,
 Lys66, Gln60, the N-terminus).*
 
-The inputs are in `examples/hfbii_dewetting/`. The run used GROMACS 2024.3 + PLUMED 2.9.4 built
-with the installer below; on an RTX 3080 with 12 CPU cores it ran at 170 ns/day with INDUS
-active, against 826 ns/day without, since the 245-sphere search is evaluated on the CPU every
-step.
+The inputs are in `examples/hfbii_dewetting/`.
+
+**Throughput on this system** (18,451 atoms; 5,823 water oxygens against 245 spheres evaluated
+every step), GROMACS 2024.3 + PLUMED 2.9.4 from the installer below, one AMD Ryzen 9 5900X
+(12 cores) and one NVIDIA RTX 3080, 2 fs steps, 3000-step benchmarks:
+
+| Configuration | MPI ranks x OpenMP threads | ns/day |
+| --- | --- | --- |
+| GPU, no INDUS | 1 x 12 | 826 |
+| GPU + INDUS union of spheres | 1 x 12 | 160 |
+| GPU + INDUS union of spheres | 1 x 24 | 119 |
+| GPU + INDUS union of spheres | 2 x 12 | 73 |
+| GPU + INDUS union of spheres | 4 x 6 | 68 |
+| CPU only, no INDUS | 1 x 12 | 143 |
+| CPU only + INDUS union of spheres | 1 x 12 | 84 |
+| CPU only + INDUS union of spheres | 12 x 1 | 54 |
+
+INDUS runs on the CPU inside PLUMED and, with this many spheres, sets the step time: the GPU
+buys a factor of two with INDUS active rather than the factor of six it gives plain MD. One
+MPI rank with OpenMP threads is the right layout, since every rank evaluates the whole probe
+volume. The standalone driver processes the same system at about 45 ms per frame on 24
+threads. The brute-force search over centers is the obvious target for a cell list.
 
 ## Installation
 
@@ -71,16 +89,19 @@ step.
 prefix: PLUMED with INDUS patched in, GROMACS patched with that PLUMED (runtime mode), and the
 standalone driver, followed by the tests below and a manifest with versions, flags and
 results. Defaults are PLUMED 2.9.4 and GROMACS 2024.3 with MPI, OpenMP, and CUDA when `nvcc`
-is found. Every setting is an environment variable; see the header of the script.
+is found; tarballs are checksum-verified. Every setting is an environment variable, and
+`--print-config` shows the resolved values before anything is built.
 
 ```
+scripts/install/install_indus_stack.sh --print-config
 MPICC=/path/to/mpicc MPICXX=/path/to/mpicxx CUDA_HOME=/usr/local/cuda \
     scripts/install/install_indus_stack.sh --root $HOME/programs/indus-stack
 source $HOME/programs/indus-stack/gromacs-2024.3_plumed-2.9.4/env.sh
 ```
 
-Phases can be rerun individually with `--only <phase>` or resumed with `--from <phase>`;
-`--list` shows them.
+`--no-mpi` and `--no-gpu` select the lighter builds; `--only <phase>` and `--from <phase>`
+rerun or resume. Worked examples for a GPU workstation, a CPU-only laptop, and a cluster with
+modules, plus troubleshooting, are in [`scripts/install/README.md`](scripts/install/README.md).
 
 ### Standalone driver only
 
