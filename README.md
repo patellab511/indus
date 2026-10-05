@@ -86,6 +86,10 @@ using one full socket of 16 cores per row:
 | 8 x 2 | 51 | |
 | 16 x 1 | 46 | 97 |
 
+Going from 12 to 16 cores gained about 20 percent, so the system still scales at this size.
+For production on such a node: one 16-core socket per umbrella window, run as one MPI rank
+with 16 OpenMP threads, two windows per node; a 3 ns window takes about 80 minutes.
+
 INDUS runs on the CPU inside PLUMED and, with this many spheres, sets the step time:
 the GPU gives a factor of two with INDUS active against a factor of six for plain MD. Every
 rank evaluates the whole probe volume, so few ranks with many threads is the better layout
