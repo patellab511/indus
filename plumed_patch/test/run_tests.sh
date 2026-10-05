@@ -21,6 +21,10 @@ fi
 main_test_dir=$( realpath "$( dirname "$0" )" )
 
 tests=(
+	"probe_volumes/sphere"
+	"probe_volumes/box"
+	"probe_volumes/cylinder"
+	"probe_volumes/union_of_spheres"
 	"bias_ntilde_v/sphere/RESTRAINT"
 )
 
@@ -31,7 +35,8 @@ for test_subdir in "${tests[@]}"; do
 	cd "$test_dir" || { echo "  FAILED (missing directory)"; num_failed=$((num_failed+1)); continue; }
 
 	rm -f plumed.out forces.out
-	if ! ./run_driver.sh "$plumed_exe" &> stdout.log; then
+	runner=./run_driver.sh; [[ -x $runner ]] || runner=../run_driver.sh
+	if ! "$runner" "$plumed_exe" &> stdout.log; then
 		echo "  FAILED (plumed driver exited with an error; see $test_dir/stdout.log)"
 		num_failed=$((num_failed+1)); continue
 	fi
@@ -40,6 +45,10 @@ for test_subdir in "${tests[@]}"; do
 	for f in plumed.out forces.out; do
 		if [[ ! -f $f ]]; then
 			echo "  FAILED (no $f produced)"; passed=0
+		elif [[ -f ref/$f.gz ]]; then     # large references are stored compressed
+			if ! diff -q "$f" <( gzip -dc "ref/$f.gz" ) > /dev/null; then
+				echo "  FAILED ($f differs from ref/$f.gz)"; passed=0
+			fi
 		elif ! diff -q "$f" "ref/$f" > /dev/null; then
 			echo "  FAILED ($f differs from ref/$f)"; passed=0
 		fi

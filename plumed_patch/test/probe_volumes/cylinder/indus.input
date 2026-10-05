@@ -1,0 +1,20 @@
+### INDUS input (PLUMED mode): cylinder probe volume ###
+
+Target = [ atom_index 1-16500:4 ]
+
+ProbeVolume = {
+	type   = cylinder
+	axis   = y
+	radius = 0.9
+	height = 0.8
+	base   = [ 1.1 1.2 2.3 ]
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# INDUS internal bias off; the restraint is applied by PLUMED
+Bias = {
+	order_parameter = ntilde
+	x_star = 0.0
+	kappa  = 0.0
+}

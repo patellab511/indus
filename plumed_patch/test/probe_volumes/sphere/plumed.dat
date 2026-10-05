@@ -1,0 +1,6 @@
+# INDUS (sphere probe volume) under a harmonic restraint on Ntilde, driven over a stored trajectory.
+# Same geometry and bias (kappa = 1, N* = 0) as the standalone test in test/indus, so the
+# forces here must match that test's forces_debug.out.
+indus: INDUS INPUTFILE=indus.input
+restraint: RESTRAINT ARG=indus.ntilde AT=0.0 KAPPA=1.0
+PRINT ARG=indus.n,indus.ntilde,restraint.bias STRIDE=1 FILE=plumed.out FMT=%.6f

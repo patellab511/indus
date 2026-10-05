@@ -1,0 +1,18 @@
+### INDUS input (PLUMED mode): sphere probe volume ###
+
+Target = [ atom_index 1-16500:4 ]
+
+ProbeVolume = {
+	type   = sphere
+	r_max  = 1.0
+	center = [ 0.2 0.3 0.4 ]
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# INDUS internal bias off; the restraint is applied by PLUMED
+Bias = {
+	order_parameter = ntilde
+	x_star = 0.0
+	kappa  = 0.0
+}

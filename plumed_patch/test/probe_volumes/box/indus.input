@@ -1,0 +1,19 @@
+### INDUS input (PLUMED mode): box probe volume ###
+
+Target = [ atom_index 1-16500:4 ]
+
+ProbeVolume = {
+	type = box
+	x_range = [ 1.0 2.0 ]
+	y_range = [ 1.8 3.1 ]
+	z_range = [ 3.5 4.0 ]
+	sigma   = 0.01
+	alpha_c = 0.02
+}
+
+# INDUS internal bias off; the restraint is applied by PLUMED
+Bias = {
+	order_parameter = ntilde
+	x_star = 0.0
+	kappa  = 0.0
+}

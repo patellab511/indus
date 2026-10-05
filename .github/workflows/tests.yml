@@ -1,0 +1,81 @@
+name: tests
+
+# Runs on every push and pull request:
+#   standalone  build the indus driver (MPI + OpenMP) and run its ctest suite
+#   plumed      patch INDUS into PLUMED, build the kernel (cached), run the PLUMED-driver tests
+# GROMACS is not built here (too slow for CI); use scripts/install/install_indus_stack.sh for that.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  standalone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools and OpenMPI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libopenmpi-dev openmpi-bin
+
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx \
+            -DMPI_ENABLED=ON -DOPENMP_ENABLED=ON -DGPTL_ENABLED=OFF
+
+      - name: Build
+        run: cmake --build build -j "$(nproc)"
+
+      - name: Run regression tests
+        # the MPI tests use 4 ranks x 2 threads; allow that on small runners
+        env:
+          OMPI_MCA_rmaps_base_oversubscribe: "1"
+        run: cd build && ctest --output-on-failure
+
+  plumed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PLUMED_VERSION: "2.9.4"
+      PLUMED_PREFIX: ${{ github.workspace }}/plumed-install
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools and OpenMPI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ make libopenmpi-dev openmpi-bin
+
+      # The kernel only changes when the INDUS sources, the patch, or the PLUMED version change
+      - name: Restore PLUMED build cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PLUMED_PREFIX }}
+          key: plumed-${{ env.PLUMED_VERSION }}-${{ runner.os }}-${{ hashFiles('src/**', 'plumed_patch/src/**', 'plumed_patch/patch_plumed.sh', 'plumed_patch/exclude_files.list') }}
+
+      - name: Download, patch and build PLUMED with INDUS
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          curl -L --fail -o plumed.tgz "https://github.com/plumed/plumed2/releases/download/v${PLUMED_VERSION}/plumed-${PLUMED_VERSION}.tgz"
+          tar xzf plumed.tgz
+          ./plumed_patch/patch_plumed.sh "plumed-${PLUMED_VERSION}"
+          cd "plumed-${PLUMED_VERSION}"
+          FLAGS="-O2 -g -fPIC -std=c++11 -fopenmp -DMPI_ENABLED"
+          CC=mpicc CXX=mpicxx CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" LDFLAGS="-fopenmp" LIBS="-lstdc++" \
+            ./configure --prefix="$PLUMED_PREFIX" --enable-mpi --enable-openmp
+          make -j "$(nproc)"
+          make install
+
+      - name: Run PLUMED-driver tests
+        run: |
+          export PATH="$PLUMED_PREFIX/bin:$PATH"
+          export LD_LIBRARY_PATH="$PLUMED_PREFIX/lib:${LD_LIBRARY_PATH:-}"
+          export PLUMED_KERNEL="$PLUMED_PREFIX/lib/libplumedKernel.so"
+          plumed info --version
+          ./plumed_patch/test/run_tests.sh plumed
