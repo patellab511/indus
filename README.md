@@ -74,17 +74,17 @@ threads in total, split between MPI ranks and OpenMP threads per rank:
 | 6 x 2 | 124 | 71 | | |
 | 12 x 1 | 67 | 59 | 52 | 132 |
 
-ns/day. The same benchmark on a cluster node (chestnut at Penn: two Intel Xeon E5-2683 v4 at
-2.1 GHz, no GPU, built with the installer under gcc 9.2 and OpenMPI 4.1):
+ns/day. The same benchmark on a cluster node (chestnut at Penn: two 16-core Intel Xeon
+E5-2683 v4 at 2.1 GHz, no GPU, built with the installer under gcc 9.2 and OpenMPI 4.1),
+using one full socket of 16 cores per row:
 
 | ranks x threads | CPU + INDUS | CPU, no INDUS |
 | --- | --- | --- |
-| 1 x 12 | 46 | 77 |
-| 2 x 6 | 44 | |
-| 3 x 4 | 41 | |
-| 4 x 3 | 45 | |
-| 6 x 2 | 43 | |
-| 12 x 1 | 41 | 77 |
+| 1 x 16 | 55 | 95 |
+| 2 x 8 | 53 | |
+| 4 x 4 | 54 | |
+| 8 x 2 | 51 | |
+| 16 x 1 | 46 | 97 |
 
 INDUS runs on the CPU inside PLUMED and, with this many spheres, sets the step time:
 the GPU gives a factor of two with INDUS active against a factor of six for plain MD. Every
